@@ -64,6 +64,7 @@
                 <th>التشكيل</th>
                 <th>رقم الكتاب</th>
                 <th>تاريخ الوارد</th>
+                <th>هامش مسؤول الإدارة</th>
                 <th>الإجراءات</th>
               </tr>
             </thead>
@@ -75,6 +76,7 @@
                 <td>{{ inc.formationName }}</td>
                 <td>{{ inc.incomingBookNumber }}</td>
                 <td>{{ formatDate(inc.incomingDate) }}</td>
+                <td>{{ inc.marginNote?.managerNote || "—" }}</td>
 
                 <td>
                   <div class="d-flex justify-content-center gap-2">
@@ -109,12 +111,41 @@
                         />
                       </svg>
                     </button>
+                    <!-- ترحيل -->
+                    <button class="button-transfer" @click="openTransfer(inc)">
+                      <svg class="svgIcon" viewBox="0 0 512 512">
+                        <path
+                          d="M492.7 273.4L400 366.1c-15 15-41 4.5-41-17V320H208c-22.1 
+                           0-40-17.9-40-40v-48c0-22.1 17.9-40 40-40h151V162c0-21.5 
+                           26-32 41-17l92.7 92.7c9.4 9.4 9.4 24.6 0 
+                           34.1zM20 238.6l92.7-92.7c15-15 41-4.5 41 17v42h151c22.1 
+                           0 40 17.9 40 40v48c0 22.1-17.9 40-40 40H153v29.1c0 21.5-26 
+                           32-41 17L20 273.4c-9.4-9.4-9.4-24.6 0-34.1z"
+                        />
+                      </svg>
+                    </button>
+
+                    <button class="button-view" @click="openView(inc)">
+                      <svg class="svgIcon" viewBox="0 0 576 512">
+                        <path
+                          d="M572.52 241.4C518.29 135.59 407.81 64 288 
+                            64S57.71 135.59 3.48 241.4a48.07 48.07 
+                            0 000 45.2C57.71 376.41 168.19 448 288 
+                            448s230.29-71.59 284.52-161.4a48.07 48.07 
+                            0 000-45.2zM288 400c-88.22 0-168.48-48.33-211.86-128C119.52 
+                            192.33 199.78 144 288 144s168.48 48.33 
+                            211.86 128C456.48 351.67 376.22 400 288 
+                            400zm0-208a80 80 0 1080 80 80.09 80.09 
+                            0 00-80-80z"
+                        />
+                      </svg>
+                    </button>
                   </div>
                 </td>
               </tr>
 
               <tr v-if="incomingList.length === 0">
-                <td colspan="6" class="py-5 text-muted">
+                <td colspan="7" class="py-5 text-muted">
                   <i class="bi bi-inboxes fs-1 d-block mb-2"></i>
                   لا توجد بيانات
                 </td>
@@ -213,34 +244,32 @@
                 <label class="form-label">الموضوع</label>
                 <input v-model="form.subject" class="form-control" />
               </div>
+              <div class="col-6">
+                <label class="form-label">المحتوى</label>
+                <input v-model="form.content" rows="3" class="form-control" />
+              </div>
               <div class="col-md-6">
-                <label class="form-label">الشعبة</label>
+                <label class="form-label">ارسال الى الوحدة:</label>
                 <div class="custom-vue-select-container">
                   <VueSelect
-                    v-model="form.departmentId"
+                    v-model="form.departmentIds"
                     :options="departments"
                     label="name"
                     :reduce="(d) => d.id"
+                    multiple
                     searchable
-                    placeholder="اختر الشعبة أو اكتب للبحث..."
+                    placeholder="اختر الوحدة..."
                   />
                 </div>
-              </div>
-
-              <div class="col-12">
-                <label class="form-label">المحتوى</label>
-                <textarea
-                  v-model="form.content"
-                  rows="3"
-                  class="form-control"
-                ></textarea>
               </div>
             </div>
           </div>
 
           <div class="modal-footer">
-            <button class="btn btn-light" @click="close()">إلغاء</button>
-            <button class="btn btn-add">
+            <button type="button" class="btn btn-light" @click="close()">
+              إلغاء
+            </button>
+            <button type="submit" class="btn btn-add" @click.stop>
               {{ editMode ? "حفظ التعديل" : "إضافة" }}
             </button>
           </div>
@@ -315,6 +344,139 @@
       </div>
     </div>
   </div>
+
+  <!-- Transfer Modal -->
+  <div class="modal fade" ref="transferModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">ترحيل المعاملة</h5>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-12">
+              <label class="form-label">الوحدة</label>
+              <div class="custom-vue-select-container">
+                <VueSelect
+                  v-model="transfer.departmentId"
+                  :options="departments"
+                  label="name"
+                  :reduce="(d) => d.id"
+                  placeholder="اختر الوحدة..."
+                  searchable
+                />
+              </div>
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label">إرفاق ملفات</label>
+              <input
+                type="file"
+                multiple
+                @change="handleFiles"
+                class="form-control"
+              />
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label">ملاحظات</label>
+              <textarea
+                v-model="transfer.notes"
+                rows="3"
+                class="form-control"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeTransfer()">إلغاء</button>
+          <button class="btn btn-add" @click="submitTransfer()">ترحيل</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Modal -->
+  <div class="modal fade" ref="viewModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">عرض تفاصيل الوارد</h5>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">اسم الجريح</label>
+              <input class="form-control" :value="view.injuredName" disabled />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">التشكيل</label>
+              <input
+                class="form-control"
+                :value="view.formationName"
+                disabled
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">رقم الكتاب</label>
+              <input
+                class="form-control"
+                :value="view.incomingBookNumber"
+                disabled
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">تاريخ الوارد</label>
+              <input
+                class="form-control"
+                :value="formatDate(view.incomingDate)"
+                disabled
+              />
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label">الموضوع</label>
+              <input class="form-control" :value="view.subject" disabled />
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label">المحتوى</label>
+              <textarea
+                class="form-control"
+                rows="3"
+                :value="view.content"
+                disabled
+              ></textarea>
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label">الوحدة</label>
+
+              <div class="badges-box">
+                <span
+                  v-for="(dep, i) in view.departmentNames"
+                  :key="i"
+                  class="badge-tag"
+                >
+                  {{ dep }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeView()">إلغاء</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -322,28 +484,29 @@ import { ref, reactive, onMounted } from "vue";
 import { Modal } from "bootstrap";
 import { computed } from "vue";
 import VueSelect from "vue3-select";
+import { useRouter } from "vue-router";
+import { successAlert, errorAlert, confirmDelete } from "@/utils/alert.js";
 import { getDepartments } from "@/services/departments.service.js";
 import { getFormations } from "@/services/formations.service.js";
-
 import {
   getIncomings,
   addIncoming,
   updateIncoming,
   deleteIncoming,
+  transferIncoming,
 } from "@/services/incoming.service.js";
 
+const router = useRouter();
+/* Pagination */
 const visiblePages = computed(() => {
   const pages = [];
-
   let start = page.value - 1;
   if (start < 1) start = 1;
-
   let end = start + 2;
   if (end > totalPages.value) {
     end = totalPages.value;
     start = Math.max(1, end - 2);
   }
-
   for (let i = start; i <= end; i++) pages.push(i);
   return pages;
 });
@@ -352,34 +515,17 @@ const formations = ref([]);
 const incomingList = ref([]);
 const loading = ref(false);
 
-// pagination
 const page = ref(1);
 const totalPages = ref(1);
 const pageSize = 10;
 
-// Filters
+/* Filters */
 const filters = reactive({
   injuredName: "",
   subject: "",
 });
 
-// Modal
-const modalEl = ref(null);
-let modal = null;
-const editMode = ref(false);
-const departments = ref([]);
-
-const form = reactive({
-  id: "",
-  injuredName: "",
-  formationId: null,
-  incomingBookNumber: "",
-  incomingDate: "",
-  subject: "",
-  content: "",
-  departmentId: null,
-});
-
+/* Reset Filters */
 const resetFilters = () => {
   filters.name = "";
   filters.id = "";
@@ -394,7 +540,7 @@ const resetFilters = () => {
   load();
 };
 
-// Load data
+/* Load Data */
 const load = async () => {
   loading.value = true;
 
@@ -418,6 +564,7 @@ const load = async () => {
   }
 };
 
+/* Advanced Search Modal */
 const advancedModal = ref(null);
 let modalAdv = null;
 
@@ -429,6 +576,9 @@ const applyAdvanced = () => {
   page.value = 1;
   load();
 };
+
+/* Load Departments */
+const departments = ref([]);
 
 const loadDepartments = async () => {
   try {
@@ -442,6 +592,7 @@ const loadDepartments = async () => {
   }
 };
 
+/* Load Formations */
 const loadFormations = async () => {
   try {
     const res = await getFormations({
@@ -455,54 +606,72 @@ const loadFormations = async () => {
   }
 };
 
-// Open Add
+/* Add/Edit Modal */
+const modalEl = ref(null);
+let modal = null;
+const editMode = ref(false);
+
+const form = reactive({
+  id: "",
+  injuredName: "",
+  formationId: null,
+  incomingBookNumber: "",
+  incomingDate: "",
+  subject: "",
+  content: "",
+  departmentIds: [],
+});
+
 const openAdd = () => ((editMode.value = false), reset(), modal.show());
 
-// Open Edit
-const openEdit = (item) => (
-  (editMode.value = true), Object.assign(form, item), modal.show()
-);
+const openEdit = (item) => {
+  editMode.value = true;
+  form.id = item.id;
+  form.injuredName = item.injuredName;
+  form.formationId = item.formationId;
+  form.incomingBookNumber = item.incomingBookNumber;
+  form.incomingDate = item.incomingDate;
+  form.subject = item.subject;
+  form.content = item.content;
+  form.departmentIds = item.departmentIds || [];
 
-// Save Add/Edit
+  modal.show();
+};
+
 const save = async () => {
   try {
-    let res;
-
     if (!editMode.value) {
-      res = await addIncoming(form);
+      await addIncoming(form);
+      successAlert(" تمت الإضافة بنجاح");
     } else {
-      res = await updateIncoming(form.id, form);
+      await updateIncoming(form.id, form);
+      successAlert(" تم التعديل بنجاح");
     }
 
-    // أغلق المودل
     modal.hide();
-
-    // أعد تحميل البيانات
-    load();
-
-    // نحصل على ID الوارد الجديد
-    const incomingId = res.data.data.id;
-
-    // نحصل على ID القسم المختار
-    const deptId = form.departmentId;
-
-    // الانتقال تلقائياً إلى صفحة الهامش
-    router.push(`/ManagerNote?incomingId=${incomingId}&departmentId=${deptId}`);
+    load(); 
   } catch (e) {
-    console.log("خطأ بالحفظ", e);
+    console.error("خطأ بالحفظ", e);
+    errorAlert(" فشل الحفظ");
   }
 };
 
-// Delete
 const remove = async (id) => {
-  await deleteIncoming(id);
-  load();
+  const result = await confirmDelete("هل أنت متأكد من الحذف؟");
+  if (!result.isConfirmed) return;
+  try {
+    await deleteIncoming(id);
+    successAlert(" تم الحذف بنجاح");
+    load();
+  } catch (e) {
+    console.error(e);
+    errorAlert(" حدث خطأ أثناء الحذف");
+  }
 };
 
-// Pagination
 const changePage = (p) => ((page.value = p), load());
 
-// Reset Modal
+/* Reset Form */
 const reset = () => {
   form.id = "";
   form.injuredName = "";
@@ -516,15 +685,111 @@ const reset = () => {
 
 const close = () => modal.hide();
 
-const formatDate = (d) =>
-  new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(d));
+/* Date Formatting */
+const formatDate = (d) => {
+  if (!d) return "—";
 
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return "—";
+
+  return new Intl.DateTimeFormat("en-US", {
+    // dateStyle: "medium",
+    // timeStyle: "short",
+  }).format(date);
+};
+
+const transferModal = ref(null);
+let modalTransfer = null;
+
+const transfer = reactive({
+  incomingId: "",
+  departmentId: null,
+  notes: "",
+  files: [],
+});
+
+const openTransfer = (inc) => {
+  transfer.incomingId = inc.id;
+  transfer.departmentId = null;
+  transfer.notes = "";
+  transfer.files = [];
+  modalTransfer.show();
+};
+
+const closeTransfer = () => modalTransfer.hide();
+
+const handleFiles = (e) => {
+  transfer.files = Array.from(e.target.files);
+};
+
+const submitTransfer = async () => {
+  try {
+    if (!transfer.incomingId || !transfer.departmentId) {
+      alert("يرجى اختيار الشعبة المراد الترحيل إليها.");
+      return;
+    }
+
+    const fd = new FormData();
+
+    fd.append("IncomingId", transfer.incomingId);
+    fd.append("DepartmentId", transfer.departmentId);
+
+    if (transfer.notes) {
+      fd.append("Notes", transfer.notes);
+    }
+    if (transfer.files.length > 0) {
+      transfer.files.forEach((f) => fd.append("files", f));
+    }
+    for (let pair of fd.entries()) {
+      console.log(pair[0] + ": ", pair[1]);
+    }
+
+    await transferIncoming(fd);
+
+    modalTransfer.hide();
+    load();
+  } catch (e) {
+    console.log("خطأ في الترحيل", e);
+  }
+};
+
+/* VIEW MODAL */
+const viewModal = ref(null);
+let modalView = null;
+
+const view = reactive({
+  id: "",
+  injuredName: "",
+  formationName: "",
+  incomingBookNumber: "",
+  incomingDate: "",
+  subject: "",
+  content: "",
+  departmentNames: [],
+});
+
+
+const openView = (inc) => {
+  view.id = inc.id;
+  view.injuredName = inc.injuredName;
+  view.formationName = inc.formationName;
+  view.incomingBookNumber = inc.incomingBookNumber;
+  view.incomingDate = inc.incomingDate;
+  view.subject = inc.subject;
+  view.content = inc.content;
+  view.departmentNames = inc.departmentNames || [];
+
+  modalView.show();
+};
+
+const closeView = () => modalView.hide();
+
+/* Init */
 onMounted(() => {
   modal = new Modal(modalEl.value);
   modalAdv = new Modal(advancedModal.value);
+  modalTransfer = new Modal(transferModal.value);
+  modalView = new Modal(viewModal.value);
   load();
   loadDepartments();
   loadFormations();

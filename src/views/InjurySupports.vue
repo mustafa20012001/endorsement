@@ -65,12 +65,11 @@
                   :reduce="(o) => o.value"
                   searchable
                   placeholder="اختر نوع الإصابة..."
-                  class="form-control p-0"
                 />
               </div>
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-6">
               <label class="form-label">نوع الإصابة</label>
               <div class="custom-vue-select-container">
                 <VueSelect
@@ -80,7 +79,6 @@
                   :reduce="(o) => o.value"
                   searchable
                   placeholder="اختر نوع الإصابة..."
-                  class="form-control p-0"
                 />
               </div>
             </div>

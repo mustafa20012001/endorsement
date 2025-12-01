@@ -1,8 +1,12 @@
 <template>
   <!-- App Bar -->
-  <div class="appbar rounded-3 p-3 mb-3 d-flex justify-content-between align-items-center">
+  <div
+    class="appbar rounded-3 p-3 mb-3 d-flex justify-content-between align-items-center"
+  >
     <div class="d-flex align-items-center gap-2">
-      <span class="appbar-icon d-inline-flex align-items-center justify-content-center">
+      <span
+        class="appbar-icon d-inline-flex align-items-center justify-content-center"
+      >
         <i class="bi bi-receipt"></i>
       </span>
       <div>
@@ -10,23 +14,28 @@
         <small class="text-muted">إضافة رقم الكتاب – التاريخ – الأصل</small>
       </div>
     </div>
-
-    <button class="btn btn-primary" @click="openAdd()">إضافة معلومات جديدة</button>
   </div>
 
-  <!-- Search -->
+  <!-- Search Bar -->
   <div class="card shadow-sm border-0 mb-3 p-3">
     <div class="row g-3">
-      <div class="col-md-4">
-        <input v-model="filters.memoNumber" class="form-control" placeholder="بحث برقم الكتاب..." />
+      <!-- بحث بالاسم -->
+      <div class="col-md-6">
+        <input
+          v-model="filters.injuredName"
+          class="form-control"
+          placeholder="بحث بالاسم..."
+        />
       </div>
 
-      <div class="col-md-4">
-        <input v-model="filters.memoDateFrom" type="date" class="form-control" />
-      </div>
+      <div class="col-md-6 d-flex justify-content-end gap-2 align-items-end">
+        <button class="btn-search" @click="load()">بحث</button>
 
-      <div class="col-md-4">
-        <button class="btn btn-primary w-100" @click="load()">بحث</button>
+        <button class="btn-advanced" @click="openAdvanced()">بحث متقدم</button>
+
+        <button class="btn-advanced" @click="resetFilters()">
+          إعادة تعيين
+        </button>
       </div>
     </div>
   </div>
@@ -38,262 +47,578 @@
     </div>
 
     <div class="card-body">
-      <div v-if="loading" class="text-center py-5">
+      <div v-if="loading" class="text-center py-4">
         <div class="spinner-border"></div>
       </div>
 
-      <div v-else class="table-responsive">
-        <table class="table custom-table text-center align-middle mb-0">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>رقم الكتاب</th>
-              <th>تاريخ الكتاب</th>
-              <th>ملف الأصل</th>
-              <th>الإجراءات</th>
-            </tr>
-          </thead>
+      <div v-else class="card inner-card">
+        <div class="table-responsive">
+          <table class="table custom-table align-middle text-center mb-0">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>تاريح استلام المعاملة</th>
+                <th>اسم الجريح</th>
+                <th>موضوع الوارد</th>
+                <th>هامش المدير</th>
+                <th>تاريخ الكتاب</th>
+                <th>ملف الأصل</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
 
-          <tbody>
-            <tr v-for="(m, i) in list" :key="m.id">
-              <td>{{ (page - 1) * pageSize + i + 1 }}</td>
-              <td>{{ m.memoNumber }}</td>
-              <td>{{ formatDate(m.memoDate) }}</td>
-              <td>
-                <span v-if="m.hasOriginalFile" class="badge bg-success">نعم</span>
-                <span v-else class="badge bg-secondary">لا</span>
-              </td>
+            <tbody>
+              <tr v-for="(m, i) in list" :key="m.id">
+                <td>{{ (page - 1) * pageSize + i + 1 }}</td>
+                <td>{{ formatDate(m.createdAt) }}</td>
+                <td>{{ m.injuredName }}</td>
+                <td>{{ m.incomingSubject }}</td>
+                <td>{{ m.managerNote }}</td>
+                <td>{{ formatDate(m.createdAt) }}</td>
+                <td>
+                  <span v-if="m.hasOriginalFile" class="badge bg-success"
+                    >نعم</span
+                  >
+                  <span v-else class="badge bg-secondary">لا</span>
+                </td>
 
-              <td>
-  <div class="d-flex justify-content-center gap-2">
+                <td>
+                  <div class="d-flex justify-content-center gap-2">
+                    <!-- زر إضافة هامش -->
+                    <button class="button-add" @click="openAdd(m.incomingId)">
+                      <svg class="svgIcon" viewBox="0 0 448 512">
+                        <path
+                          d="M432 256c0 17.7-14.3 32-32 32h-128v128c0 17.7-14.3 32-32 
+                          32s-32-14.3-32-32V288H80c-17.7 0-32-14.3-32-32s14.3-32 
+                          32-32h128V96c0-17.7 14.3-32 32-32s32 14.3 
+                          32 32v128h128c17.7 0 32 14.3 32 32z"
+                        />
+                      </svg>
+                    </button>
+                    <!-- تعديل -->
+                    <button class="button-edit" @click="openEdit(m)">
+                      <svg class="svgIcon" viewBox="0 0 512 512">
+                        <path
+                          d="M290.74 93.24l-197.5 197.5c-2.5 2.5-4.1 
+                          5.7-4.6 9.1l-12 84c-1.1 7.5 5.3 13.9 
+                          12.8 12.8l84-12c3.4-.5 6.6-2.1 
+                          9.1-4.6l197.5-197.5-89.3-89.3z 
+                          M497.9 56.69l-42.6-42.6c-18.7-18.7-49.1-18.7-67.9 
+                          0l-39.1 39.1 89.3 89.3 39.1-39.1c18.8-18.7 
+                          18.8-49.1 0-67.9z"
+                        />
+                      </svg>
+                    </button>
 
-    <!-- زر إضافة هامش -->
-    <button class="button-add" @click="openAddFor(m.id)">
-      ➕ إضافة
-    </button>
+                    <!-- حذف -->
+                    <button class="button" @click="remove(m.id)">
+                      <svg class="svgIcon" viewBox="0 0 448 512">
+                        <path
+                          d="M135.2 17.7L128 32H32c-17.7 0-32 14.3-32 32s14.3 32 
+                           32 32h384c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 
+                           6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 
+                           128H32l21.2 339c1.6 25.3 22.6 45 47.9 45h246c25.3 
+                           0 46.3-19.7 47.9-45L416 128z"
+                        />
+                      </svg>
+                    </button>
 
-    <!-- تعديل -->
-    <button class="button-edit" @click="openEdit(m)">
-      ✏️
-    </button>
+                    <button class="button-transfer" @click="openTransfer(m)">
+                      <svg class="svgIcon" viewBox="0 0 512 512">
+                        <path
+                          d="M492.7 273.4L400 366.1c-15 15-41 4.5-41-17V320H208c-22.1 
+                           0-40-17.9-40-40v-48c0-22.1 17.9-40 40-40h151V162c0-21.5 
+                           26-32 41-17l92.7 92.7c9.4 9.4 9.4 24.6 0 
+                           34.1zM20 238.6l92.7-92.7c15-15 41-4.5 41 17v42h151c22.1 
+                           0 40 17.9 40 40v48c0 22.1-17.9 40-40 40H153v29.1c0 21.5-26 
+                           32-41 17L20 273.4c-9.4-9.4-9.4-24.6 0-34.1z"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
 
-    <!-- حذف -->
-    <button class="button" @click="remove(m.id)">
-      🗑️
-    </button>
-
-  </div>
-</td>
-
-            </tr>
-
-            <tr v-if="list.length === 0">
-              <td colspan="6" class="py-4 text-muted">
-                <i class="bi bi-inboxes fs-1 d-block mb-2"></i>
-                لا توجد بيانات
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              <tr v-if="list.length === 0">
+                <td colspan="8" class="py-4 text-muted">
+                  <i class="bi bi-inboxes fs-1 d-block mb-2"></i>
+                  لا توجد بيانات
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
+      <!-- </div> -->
+
+      <!-- Pagination -->
+      <nav class="circle-pagination d-flex justify-content-center mt-4">
+        <button
+          class="page-btn"
+          :disabled="page === 1"
+          @click="changePage(page - 1)"
+        >
+          <i class="bi bi-chevron-right"></i>
+        </button>
+
+        <button
+          class="page-number"
+          v-for="p in visiblePages"
+          :key="p"
+          :class="{ active: p === page }"
+          @click="changePage(p)"
+        >
+          {{ p }}
+        </button>
+
+        <button
+          class="page-btn"
+          :disabled="page === totalPages"
+          @click="changePage(page + 1)"
+        >
+          <i class="bi bi-chevron-left"></i>
+        </button>
+      </nav>
     </div>
   </div>
-
-  <!-- Pagination -->
-  <nav class="circle-pagination d-flex justify-content-center mt-4">
-    <button class="page-btn" :disabled="page === 1" @click="changePage(page - 1)">
-      <i class="bi bi-chevron-right"></i>
-    </button>
-
-    <button
-      class="page-number"
-      v-for="p in visiblePages"
-      :key="p"
-      :class="{ active: p === page }"
-      @click="changePage(p)"
-    >
-      {{ p }}
-    </button>
-
-    <button class="page-btn" :disabled="page === totalPages" @click="changePage(page + 1)">
-      <i class="bi bi-chevron-left"></i>
-    </button>
-  </nav>
-
   <!-- Modal -->
   <div class="modal fade" tabindex="-1" ref="modalEl">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
-
         <div class="modal-header">
-          <h5 class="modal-title">{{ editMode ? "تعديل معلومات" : "إضافة معلومات" }}</h5>
+          <h5 class="modal-title">
+            {{ editMode ? "تعديل معلومات" : "إضافة معلومات" }}
+          </h5>
         </div>
 
         <form @submit.prevent="save">
           <div class="modal-body">
             <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">هامش المدير</label>
+                <input
+                  v-model="form.managerNote"
+                  class="form-control"
+                  required
+                />
+              </div>
 
               <div class="col-md-6">
-                <label class="form-label">رقم الكتاب</label>
-                <input v-model="form.memoNumber" class="form-control" required />
-              </div>
+  <label class="form-label">هل يوجد ملف أصل؟</label>
+
+  <div class="custom-vue-select-container">
+    <VueSelect
+      v-model="form.hasOriginalFile"
+      :options="[
+        { label: 'نعم', value: true },
+        { label: 'لا', value: false }
+      ]"
+      label="label"
+      :reduce="(opt) => opt.value"
+      searchable
+      placeholder="اختر الحالة..."
+    />
+  </div>
+</div>
 
               <div class="col-md-6">
-                <label class="form-label">تاريخ الكتاب</label>
-                <input v-model="form.memoDate" type="date" class="form-control" required />
+                <label class="form-label">إرسال إلى الوحدة:</label>
+                <div class="custom-vue-select-container">
+                  <VueSelect
+                    v-model="form.departmentIds"
+                    :options="departments"
+                    label="name"
+                    :reduce="(d) => d.id"
+                    multiple
+                    searchable
+                    placeholder="اختر الوحدة..."
+                  />
+                </div>
               </div>
-
-              <div class="col-md-12">
-                <label class="form-label">هل يوجد ملف أصل؟</label>
-                <select v-model="form.hasOriginalFile" class="form-select">
-                  <option :value="true">نعم</option>
-                  <option :value="false">لا</option>
-                </select>
-              </div>
-
             </div>
           </div>
 
           <div class="modal-footer">
-            <button class="btn btn-light" @click="close()">إلغاء</button>
-            <button class="btn btn-add">{{ editMode ? "حفظ" : "إضافة" }}</button>
+            <button type="button" class="btn btn-light" @click="close()">
+              إلغاء
+            </button>
+            <button class="btn btn-add">
+              {{ editMode ? "حفظ" : "إضافة" }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transfer Modal -->
+  <div class="modal fade" tabindex="-1" ref="transferModalEl">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">تحويل إلى قسم آخر</h5>
+        </div>
+
+        <form @submit.prevent="transfer">
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-12">
+  <label class="form-label">القسم</label>
+
+  <div class="custom-vue-select-container">
+    <VueSelect
+      v-model="transferForm.departmentId"
+      :options="departments"
+      label="name"
+      :reduce="(d) => d.id"
+      searchable
+      placeholder="اختر القسم..."
+    />
+  </div>
+</div>
+
+              <div class="col-md-12">
+                <label class="form-label">ملاحظات</label>
+                <textarea
+                  v-model="transferForm.notes"
+                  class="form-control"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              <div class="col-md-12">
+                <label class="form-label">المرفقات</label>
+                <input
+                  type="file"
+                  @change="handleFileUpload"
+                  class="form-control"
+                  multiple
+                />
+              </div>
+            </div>
           </div>
 
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-light"
+              @click="closeTransfer()"
+            >
+              إلغاء
+            </button>
+            <button class="btn btn-primary" :disabled="transferLoading">
+              <span
+                v-if="transferLoading"
+                class="spinner-border spinner-border-sm me-1"
+              ></span>
+              تحويل
+            </button>
+          </div>
         </form>
+      </div>
+    </div>
+  </div>
 
+  <!-- Advanced Search Modal -->
+  <div class="modal fade" ref="advancedModalEl" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">بحث متقدم</h5>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-3">
+            <!-- <div class="col-12">
+              <label class="form-label">اسم الجريح</label>
+              <input v-model="filters.injuredName" class="form-control" />
+            </div> -->
+
+            <div class="col-12">
+              <label class="form-label"> هامش المدير</label>
+              <input v-model="filters.managerNote" class="form-control" />
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">من تاريخ</label>
+              <input
+                v-model="filters.createdAtFrom"
+                type="date"
+                class="form-control"
+              />
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">إلى تاريخ</label>
+              <input
+                v-model="filters.createdAtTo"
+                type="date"
+                class="form-control"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeAdvanced()">إغلاق</button>
+          <button class="btn btn-add" @click="applyAdvanced()">بحث</button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
-  
 <script setup>
-import { ref, reactive, onMounted, computed } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import { Modal } from "bootstrap";
-import {
-  getMarginAdditionalInfos,
-  addMarginAdditionalInfo,
-  updateMarginAdditionalInfo,
-  deleteMarginAdditionalInfo
-} from "@/services/margin-additional.service.js";
+import { useRoute, useRouter } from "vue-router";
+import VueSelect from "vue3-select";
+import "vue3-select/dist/vue3-select.css";
 
+import {
+  getMarginNotes,
+  addMarginNote,
+  updateMarginNote,
+  deleteMarginNote,
+  transferMarginNote,
+} from "@/services/margin-note.service.js";
+import { successAlert, errorAlert, confirmDelete } from "@/utils/alert.js";
+import { getDepartments } from "@/services/departments.service.js";
+
+const route = useRoute();
+const router = useRouter();
+
+// Values ​​from the inbox page
+const incomingId = ref(route.query.incomingId || null);
+const departmentId = route.query.departmentId;
+
+// ===== Table data =====
 const list = ref([]);
 const loading = ref(false);
 
+// ===== Pagination =====
 const page = ref(1);
 const pageSize = 10;
 const totalPages = ref(1);
+const visiblePages = ref([1]);
 
-const filters = reactive({
-  memoNumber: "",
-  memoDateFrom: "",
+// ===== Departments =====
+const departments = ref([]);
+
+// ===== Transfer Form =====
+const transferForm = reactive({
+  marginNoteId: "",
+  departmentId: "",
+  notes: "",
+  files: [],
 });
 
-const modalEl = ref(null);
-let modal = null;
-const editMode = ref(false);
+const transferLoading = ref(false);
 
-const form = reactive({
-  id: "",
-  memoNumber: "",
-  memoDate: "",
-  hasOriginalFile: false,
-  marginNoteId: "" // سيتم ربطه لاحقاً من صفحة الهامش الإداري
-});
-
-// ========== LOAD ==========
-import { useRoute } from "vue-router";
-const route = useRoute();
-
-const incomingId = route.query.incomingId;
-const departmentId = route.query.departmentId;
-
+// ===== Download data =====
 const load = async () => {
   loading.value = true;
   try {
-    const res = await getManagerNotes({
+    const res = await getMarginNotes({
       pageNumber: 1,
       pageSize: 50,
-      incomingId,
-      departmentId
+      incomingId: incomingId.value || null,
+      injuredName: filters.injuredName || null,
+      managerNote: filters.managerNote || null,
+      createdAtFrom: filters.createdAtFrom || null,
+      createdAtTo: filters.createdAtTo || null,
     });
 
     list.value = res.data.data;
+
   } finally {
     loading.value = false;
   }
 };
-const openAddFor = () => {
+
+
+// ===== Download departments =====
+const loadDepartments = async () => {
+  try {
+    const res = await getDepartments({ pageNumber: 1, pageSize: 100 });
+    departments.value = res.data.data.filter(
+      (dept) => dept.id !== departmentId
+    );
+  } catch (error) {
+    console.error("Error loading departments:", error);
+  }
+};
+
+// ===== modal =====
+const modalEl = ref(null);
+const transferModalEl = ref(null);
+let modal = null;
+let transferModal = null;
+let advancedModal = null;
+const advancedModalEl = ref(null);
+const editMode = ref(false);
+
+const form = reactive({
+  id: "",
+  incomingId,
+  managerNote: "",
+  hasOriginalFile: false,
+  departmentIds: [departmentId],
+});
+
+const openAdd = (incomingIdFromRow) => {
+  incomingId.value = incomingIdFromRow;
   editMode.value = false;
-  reset();
-
-  form.marginNoteId = `${incomingId}-${departmentId}`;
-
+  form.id = "";
+  form.managerNote = "";
+  form.hasOriginalFile = false;
+  form.departmentIds = [];
   modal.show();
 };
 
-// ========== PAGINATION ==========
-const visiblePages = computed(() => {
-  const pages = [];
-  let start = page.value - 1;
-  if (start < 1) start = 1;
-  let end = start + 2;
-  if (end > totalPages.value) {
-    end = totalPages.value;
-    start = Math.max(1, end - 2);
-  }
-  for (let i = start; i <= end; i++) pages.push(i);
-  return pages;
-});
-
-const changePage = (p) => {
-  if (p < 1 || p > totalPages.value) return;
-  page.value = p;
-  load();
+const openEdit = (row) => {
+  editMode.value = true;
+  form.id = row.id;
+  form.managerNote = row.managerNote;
+  form.hasOriginalFile = row.hasOriginalFile;
+  modal.show();
 };
 
-// ========== ACTIONS ==========
-const openAdd = () => (
-  editMode.value = false,
-  reset(),
-  modal.show()
-);
-
-const openEdit = (m) => (
-  editMode.value = true,
-  Object.assign(form, m),
-  modal.show()
-);
-
 const save = async () => {
-  if (!editMode.value) await addMarginAdditionalInfo(form);
-  else await updateMarginAdditionalInfo(form.id, form);
+  if (!incomingId) {
+    errorAlert("لا يمكن الإضافة —بيانات الوارد غير موجودة");
+    return;
+  }
 
-  modal.hide();
-  load();
+  if (!form.departmentIds || form.departmentIds.length === 0) {
+    errorAlert("اختر وحدة واحدة على الأقل");
+    return;
+  }
+
+  const data = {
+    incomingId: incomingId.value,
+    managerNote: form.managerNote,
+    departmentIds: form.departmentIds,
+  };
+
+  console.log("DATA SENT:", data);
+
+  try {
+    if (!editMode.value) {
+      await addMarginNote(data);
+      successAlert("تمت إضافة الهامش بنجاح");
+    } else {
+      await updateMarginNote(form.id, data);
+      successAlert("تم تحديث الهامش بنجاح");
+    }
+
+    modal.hide();
+    load();
+  } catch (error) {
+    console.error("SERVER ERROR:", error);
+    errorAlert("فشل الحفظ — تحقق من الحقول");
+  }
 };
 
 const remove = async (id) => {
-  await deleteMarginAdditionalInfo(id);
-  load();
-};
-
-const reset = () => {
-  form.id = "";
-  form.memoNumber = "";
-  form.memoDate = "";
-  form.hasOriginalFile = false;
+  const result = await confirmDelete();
+  if (result.isConfirmed) {
+    try {
+      await deleteMarginNote(id);
+      successAlert("تم الحذف بنجاح");
+      load();
+    } catch (e) {
+      errorAlert("فشل الحذف");
+    }
+  }
 };
 
 const close = () => modal.hide();
 
-const formatDate = (d) =>
-  new Intl.DateTimeFormat("ar-IQ", { dateStyle: "medium" }).format(new Date(d));
+// ===== Transfer Functions =====
+const openTransfer = (row) => {
+  transferForm.marginNoteId = row.id;
+  transferForm.departmentId = "";
+  transferForm.notes = "";
+  transferForm.files = [];
+  transferModal.show();
+};
 
+const handleFileUpload = (event) => {
+  transferForm.files = Array.from(event.target.files);
+};
+
+const transfer = async () => {
+  transferLoading.value = true;
+  try {
+    const formData = new FormData();
+    formData.append("MarginNoteId", transferForm.marginNoteId);
+    formData.append("DepartmentId", transferForm.departmentId);
+    formData.append("Notes", transferForm.notes);
+
+    for (let i = 0; i < transferForm.files.length; i++) {
+      formData.append("files", transferForm.files[i]);
+    }
+
+    await transferMarginNote(formData);
+    transferModal.hide();
+    load(); // Refresh the list
+  } catch (error) {
+    console.error("Error transferring margin note:", error);
+    alert("حدث خطأ أثناء التحويل");
+  } finally {
+    transferLoading.value = false;
+  }
+};
+
+const openAdvanced = () => {
+  advancedModal.show();
+};
+
+const closeAdvanced = () => {
+  advancedModal.hide();
+};
+
+const applyAdvanced = () => {
+  advancedModal.hide();
+  load();
+};
+
+const filters = reactive({
+  injuredName: "",
+  managerNote: "",
+  createdAtFrom: "",
+  createdAtTo: ""
+});
+
+const resetFilters = () => {
+  filters.injuredName = "";
+  filters.managerNote = "";
+  filters.createdAtFrom = "";
+  filters.createdAtTo = "";
+  load();
+};
+
+
+
+const closeTransfer = () => transferModal.hide();
+
+const formatDate = (d) => {
+  if (!d) return "-";
+  const dt = new Date(d);
+  if (isNaN(dt.getTime())) return "-";
+  return new Intl.DateTimeFormat("en", {
+    // dateStyle: "medium",
+    // timeStyle: "short",
+  }).format(dt);
+};
+
+// ===== INIT =====
 onMounted(() => {
   modal = new Modal(modalEl.value);
+  transferModal = new Modal(transferModalEl.value);
+  advancedModal = new Modal(advancedModalEl.value);
   load();
+  loadDepartments();
 });
 </script>
-
-  

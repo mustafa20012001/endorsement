@@ -72,7 +72,7 @@
                 <td>{{ u.departmentName }}</td>
 
                 <td>
-                   <div class="d-flex justify-content-center gap-2">
+                  <div class="d-flex justify-content-center gap-2">
                     <button class="button-edit" @click="openEdit(u)">
                       <svg class="svgIcon" viewBox="0 0 512 512">
                         <path
@@ -168,7 +168,7 @@
           </div>
 
           <div class="modal-footer">
-            <button class="btn btn-light" @click="close()">إلغاء</button>
+            <button type="button" class="btn btn-light" @click="close()">إلغاء</button>
             <button class="btn btn-add">{{ isEdit ? "حفظ" : "إضافة" }}</button>
           </div>
         </form>

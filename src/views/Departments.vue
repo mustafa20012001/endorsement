@@ -30,8 +30,9 @@
       </div>
       <div class="col-md-6 d-flex justify-content-end gap-2 align-items-end">
         <button class="btn-search" @click="load">بحث</button>
-        <button class="btn-advanced" @click="resetFilters()">أعادة تعيين</button>
-
+        <button class="btn-advanced" @click="resetFilters()">
+          أعادة تعيين
+        </button>
       </div>
     </div>
   </div>
@@ -47,44 +48,45 @@
         <div class="spinner-border"></div>
       </div>
 
-      <div v-else>
-        <table class="table custom-table text-center align-middle">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>اسم الشعبة</th>
-              <th>الوصف</th>
-              <th>عدد المستخدمين</th>
-              <th>إجراءات</th>
-            </tr>
-          </thead>
+      <div v-else class="card inner-card">
+        <div class="table-responsive">
+          <table class="table custom-table text-center align-middle">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>اسم الشعبة</th>
+                <th>الوصف</th>
+                <th>عدد المستخدمين</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
 
-          <tbody>
-            <tr v-for="(d, i) in list" :key="d.id">
-              <td>{{ (page - 1) * pageSize + i + 1 }}</td>
-              <td>{{ d.name }}</td>
-              <td>{{ d.description }}</td>
-              <td>{{ d.usersCount }}</td>
-              <td>
-                <div class="d-flex gap-2 justify-content-center">
-                  <button class="button-edit" @click="openEdit(d)">
-                    <svg viewBox="0 0 512 512" class="svgIcon">
-                      <path
-                        d="M362.7 19.3c25-25 65.5-25
+            <tbody>
+              <tr v-for="(d, i) in list" :key="d.id">
+                <td>{{ (page - 1) * pageSize + i + 1 }}</td>
+                <td>{{ d.name }}</td>
+                <td>{{ d.description }}</td>
+                <td>{{ d.usersCount }}</td>
+                <td>
+                  <div class="d-flex gap-2 justify-content-center">
+                    <button class="button-edit" @click="openEdit(d)">
+                      <svg viewBox="0 0 512 512" class="svgIcon">
+                        <path
+                          d="M362.7 19.3c25-25 65.5-25
                           90.5 0l39.5 39.5c25 25 25
                           65.5 0 90.5l-39.5 39.5L323.2
                           58.8l39.5-39.5zm-68 68L58.8
                           323.2 19.3 482.7c-2.9 12.1
                           8.2 23.2 20.3 20.3l159.5-39.5L444.7
                           217.3 294.7 87.3z"
-                      />
-                    </svg>
-                  </button>
+                        />
+                      </svg>
+                    </button>
 
-                  <button class="button" @click="remove(d.id)">
-                    <svg viewBox="0 0 448 512" class="svgIcon">
-                      <path
-                        d="M135.2 17.7L128 32H32C14.3
+                    <button class="button" @click="remove(d.id)">
+                      <svg viewBox="0 0 448 512" class="svgIcon">
+                        <path
+                          d="M135.2 17.7L128 32H32C14.3
                           32 0 46.3 0 64s14.3 32 
                           32 32h384c17.7 0 32-14.3 
                           32-32s-14.3-32-32-32H320l-7.2-14.3C307.4
@@ -93,50 +95,50 @@
                           128H32l21.2 339c1.6 25.3 
                           22.6 45 47.9 45h246c25.3 
                           0 46.3-19.7 47.9-45L416 128z"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
 
-            <tr v-if="list.length === 0">
-              <td colspan="5" class="py-5 text-muted">لا توجد بيانات</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- Pagination -->
-        <nav class="circle-pagination d-flex justify-content-center mt-4">
-          <button
-            class="page-btn"
-            :disabled="page === 1"
-            @click="changePage(page - 1)"
-          >
-            <i class="bi bi-chevron-right"></i>
-          </button>
-
-          <button
-            v-for="p in visiblePages"
-            :key="p"
-            class="page-number"
-            :class="{ active: p === page }"
-            @click="changePage(p)"
-          >
-            {{ p }}
-          </button>
-
-          <button
-            class="page-btn"
-            :disabled="page === totalPages"
-            @click="changePage(page + 1)"
-          >
-            <i class="bi bi-chevron-left"></i>
-          </button>
-        </nav>
+              <tr v-if="list.length === 0">
+                <td colspan="5" class="py-5 text-muted">لا توجد بيانات</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
+  <!-- Pagination -->
+  <nav class="circle-pagination d-flex justify-content-center mt-4">
+    <button
+      class="page-btn"
+      :disabled="page === 1"
+      @click="changePage(page - 1)"
+    >
+      <i class="bi bi-chevron-right"></i>
+    </button>
+
+    <button
+      v-for="p in visiblePages"
+      :key="p"
+      class="page-number"
+      :class="{ active: p === page }"
+      @click="changePage(p)"
+    >
+      {{ p }}
+    </button>
+
+    <button
+      class="page-btn"
+      :disabled="page === totalPages"
+      @click="changePage(page + 1)"
+    >
+      <i class="bi bi-chevron-left"></i>
+    </button>
+  </nav>
 
   <!-- Modal -->
   <div class="modal fade" ref="modalEl" tabindex="-1">
@@ -167,7 +169,9 @@
           </div>
 
           <div class="modal-footer">
-            <button class="btn btn-light" @click="close">إلغاء</button>
+            <button type="button" class="btn btn-light" @click="close">
+              إلغاء
+            </button>
             <button class="btn btn-add">
               {{ editMode ? "حفظ" : "إضافة" }}
             </button>
@@ -191,7 +195,6 @@ import {
 
 import { successAlert, errorAlert, confirmDelete } from "@/utils/alert.js";
 
-
 const page = ref(1);
 const pageSize = 10;
 const totalPages = ref(1);
@@ -201,7 +204,6 @@ const loading = ref(false);
 const filters = reactive({
   name: "",
 });
-
 
 const modalEl = ref(null);
 let modal = null;
@@ -213,7 +215,6 @@ const form = reactive({
   name: "",
   description: "",
 });
-
 
 const load = async () => {
   loading.value = true;
@@ -234,7 +235,6 @@ const load = async () => {
   }
 };
 
-
 const visiblePages = computed(() => {
   const arr = [];
   let start = page.value - 1;
@@ -251,13 +251,11 @@ const visiblePages = computed(() => {
   return arr;
 });
 
-
 const openAdd = () => ((editMode.value = false), reset(), modal.show());
 
 const openEdit = (d) => (
   (editMode.value = true), Object.assign(form, d), modal.show()
 );
-
 
 const save = async () => {
   try {
@@ -279,13 +277,11 @@ const save = async () => {
 };
 
 const resetFilters = () => {
-    filters.name = "";
-    load();
-  };
-
+  filters.name = "";
+  load();
+};
 
 const reset = () => ((form.id = ""), (form.name = ""), (form.description = ""));
-
 
 const remove = async (id) => {
   const res = await confirmDelete();
@@ -300,13 +296,11 @@ const remove = async (id) => {
   }
 };
 
-
 const changePage = (p) => {
   if (p < 1 || p > totalPages.value) return;
   page.value = p;
   load();
 };
-
 
 const close = () => modal.hide();
 

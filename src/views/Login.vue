@@ -1,6 +1,5 @@
 <template>
   <div class="login-page">
-    
     <!-- العنوان -->
     <h1 class="system-title mb-5">نظام التأييدات</h1>
 
@@ -25,13 +24,11 @@
           required
         />
 
-        <input class="login-button" type="submit" :value="loading ? 'جاري الدخول...' : 'دخول'" />
+        <input class="login-button" type="submit" value="دخول" />
       </form>
 
       <p v-if="errorMsg" class="text-danger text-center mt-3">{{ errorMsg }}</p>
-
       <!-- <span class="agreement"><a href="#">لجنة البرمجة والتطوير</a></span> -->
-
     </div>
   </div>
 </template>
@@ -45,7 +42,7 @@ const router = useRouter();
 
 const form = ref({
   userName: "",
-  password: ""
+  password: "",
 });
 
 const loading = ref(false);
@@ -59,7 +56,7 @@ const handleLogin = async () => {
   try {
     const res = await login({
       userName: form.value.userName,
-      password: form.value.password
+      password: form.value.password,
     });
 
     // ====== قراءة الاستجابة الصحيحة ======
@@ -83,12 +80,15 @@ const handleLogin = async () => {
     // تحويل حسب الدور
     const role = Number(user.role);
 
-    if (role === 0) router.push(`${import.meta.env.VITE_BUILD_ADDRESS}/incoming`);
-    else if (role === 1) router.push(`${import.meta.env.VITE_BUILD_ADDRESS}/incoming`);
-    else if (role === 2) router.push(`${import.meta.env.VITE_BUILD_ADDRESS}/transaction-flow`);
-    else if (role === 3) router.push(`${import.meta.env.VITE_BUILD_ADDRESS}/margin-note`);
+    if (role === 0)
+      router.push(`${import.meta.env.VITE_BUILD_ADDRESS}/incoming`);
+    else if (role === 1)
+      router.push(`${import.meta.env.VITE_BUILD_ADDRESS}/incoming`);
+    else if (role === 2)
+      router.push(`${import.meta.env.VITE_BUILD_ADDRESS}/transaction-flow`);
+    else if (role === 3)
+      router.push(`${import.meta.env.VITE_BUILD_ADDRESS}/margin-note`);
     else router.push(`${import.meta.env.VITE_BUILD_ADDRESS}/home`);
-
   } catch (err) {
     errorMsg.value = "فشل الاتصال بالخادم، حاول مرة أخرى";
   }
@@ -96,7 +96,6 @@ const handleLogin = async () => {
   loading.value = false;
 };
 </script>
-
 
 <style scoped>
 /* الخلفية */
@@ -136,8 +135,14 @@ const handleLogin = async () => {
 
 /* الحركة */
 @keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-60px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-60px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* الكارد */
@@ -188,7 +193,7 @@ const handleLogin = async () => {
   margin: 20px auto;
   border-radius: 20px;
   border: none;
-  transition: .2s;
+  transition: 0.2s;
   cursor: pointer;
 }
 

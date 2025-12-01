@@ -1,0 +1,810 @@
+<template>
+  <!-- App Bar -->
+  <div
+    class="appbar rounded-3 p-3 mb-3 d-flex justify-content-between align-items-center"
+  >
+    <div class="d-flex align-items-center gap-2">
+      <span
+        class="appbar-icon d-inline-flex align-items-center justify-content-center"
+      >
+        <i class="bi bi-folder2-open"></i>
+      </span>
+      <div>
+        <h2 class="h5 fw-bold m-2">الإدارة والبيانات</h2>
+        <small class="text-muted"
+          >إدارة المذكرات – الأرقام والتواريخ والأصل</small
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="card shadow-sm border-0 mb-3 p-3">
+    <div class="row g-3">
+      <!-- اسم الجريح -->
+      <div class="col-md-6">
+        <input
+          v-model="filters.injuredName"
+          class="form-control"
+          placeholder="بحث بالاسم..."
+        />
+      </div>
+      <div class="col-md-6 d-flex justify-content-end gap-2 align-items-end">
+        <button class="btn-search" @click="load()">بحث</button>
+        <button class="btn-advanced" @click="openAdvanced()">بحث متقدم</button>
+        <button class="btn-advanced" @click="resetFilters()">
+          إعادة تعيين
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header custom-card-header">
+      <h5 class="mb-0 fw-bold primary">قائمة الإدارة والبيانات</h5>
+    </div>
+
+    <div class="card-body">
+      <div v-if="loading" class="text-center py-4">
+        <div class="spinner-border"></div>
+      </div>
+
+      <div v-else class="card inner-card">
+        <div class="table-responsive">
+          <table class="table custom-table align-middle text-center mb-0">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>تاريح استلام المعاملة</th>
+                <th>اسم الجريح</th>
+                <th>موضوع الوارد</th>
+                <th>هامش المدير</th>
+                <th>تاريخ الكتاب</th>
+                <th>ملف الأصل</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr v-for="(m, i) in list" :key="m.id">
+                <td>{{ (page - 1) * pageSize + i + 1 }}</td>
+                <td>{{ formatDate(m.createdAt) }}</td>
+                <td>{{ m.injuredName }}</td>
+                <td>{{ m.incomingSubject }}</td>
+                <td>{{ m.managerNote }}</td>
+                <td>{{ formatDate(m.createdAt) }}</td>
+                <td>
+                  <span v-if="m.hasOriginalFile" class="badge bg-success"
+                    >نعم</span
+                  >
+                  <span v-else class="badge bg-secondary">لا</span>
+                </td>
+
+                <td>
+                  <div class="d-flex justify-content-center gap-2">
+                    <!-- زر إضافة هامش -->
+                    <button class="button-add" @click="openAdd(m.id)">
+                      <svg class="svgIcon" viewBox="0 0 448 512">
+                        <path
+                          d="M432 256c0 17.7-14.3 32-32 32h-128v128c0 17.7-14.3 32-32 
+                          32s-32-14.3-32-32V288H80c-17.7 0-32-14.3-32-32s14.3-32 
+                          32-32h128V96c0-17.7 14.3-32 32-32s32 14.3 
+                          32 32v128h128c17.7 0 32 14.3 32 32z"
+                        />
+                      </svg>
+                    </button>
+                    <!-- تعديل -->
+                    <button class="button-edit" @click="openEdit(m.id)">
+                      <svg class="svgIcon" viewBox="0 0 512 512">
+                        <path
+                          d="M290.74 93.24l-197.5 197.5c-2.5 2.5-4.1 
+                          5.7-4.6 9.1l-12 84c-1.1 7.5 5.3 13.9 
+                          12.8 12.8l84-12c3.4-.5 6.6-2.1 
+                          9.1-4.6l197.5-197.5-89.3-89.3z 
+                          M497.9 56.69l-42.6-42.6c-18.7-18.7-49.1-18.7-67.9 
+                          0l-39.1 39.1 89.3 89.3 39.1-39.1c18.8-18.7 
+                          18.8-49.1 0-67.9z"
+                        />
+                      </svg>
+                    </button>
+
+                    <!-- حذف -->
+                    <button class="button" @click="remove(m.id)">
+                      <svg class="svgIcon" viewBox="0 0 448 512">
+                        <path
+                          d="M135.2 17.7L128 32H32c-17.7 0-32 14.3-32 32s14.3 32 
+                           32 32h384c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 
+                           6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 
+                           128H32l21.2 339c1.6 25.3 22.6 45 47.9 45h246c25.3 
+                           0 46.3-19.7 47.9-45L416 128z"
+                        />
+                      </svg>
+                    </button>
+
+                    <button class="button-view" @click="openView(m)">
+                      <svg class="svgIcon" viewBox="0 0 576 512">
+                        <path
+                          d="M572.52 241.4C518.29 135.59 407.81 64 288 
+                            64S57.71 135.59 3.48 241.4a48.07 48.07 
+                            0 000 45.2C57.71 376.41 168.19 448 288 
+                            448s230.29-71.59 284.52-161.4a48.07 48.07 
+                            0 000-45.2zM288 400c-88.22 0-168.48-48.33-211.86-128C119.52 
+                            192.33 199.78 144 288 144s168.48 48.33 
+                            211.86 128C456.48 351.67 376.22 400 288 
+                            400zm0-208a80 80 0 1080 80 80.09 80.09 
+                            0 00-80-80z"
+                        />
+                      </svg>
+                    </button>
+
+                    <button class="button-transfer" @click="openTransfer(m)">
+                      <svg class="svgIcon" viewBox="0 0 512 512">
+                        <path
+                          d="M492.7 273.4L400 366.1c-15 15-41 4.5-41-17V320H208c-22.1 
+                           0-40-17.9-40-40v-48c0-22.1 17.9-40 40-40h151V162c0-21.5 
+                           26-32 41-17l92.7 92.7c9.4 9.4 9.4 24.6 0 
+                           34.1zM20 238.6l92.7-92.7c15-15 41-4.5 41 17v42h151c22.1 
+                           0 40 17.9 40 40v48c0 22.1-17.9 40-40 40H153v29.1c0 21.5-26 
+                           32-41 17L20 273.4c-9.4-9.4-9.4-24.6 0-34.1z"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr v-if="list.length === 0">
+                <td colspan="6" class="py-4 text-muted">
+                  <i class="bi bi-inboxes fs-1 d-block mb-2"></i>
+                  لا توجد بيانات
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <nav class="circle-pagination d-flex justify-content-center mt-4">
+    <button
+      class="page-btn"
+      :disabled="page === 1"
+      @click="changePage(page - 1)"
+    >
+      <i class="bi bi-chevron-right"></i>
+    </button>
+
+    <button
+      class="page-number"
+      v-for="p in visiblePages"
+      :key="p"
+      :class="{ active: p === page }"
+      @click="changePage(p)"
+    >
+      {{ p }}
+    </button>
+
+    <button
+      class="page-btn"
+      :disabled="page === totalPages"
+      @click="changePage(page + 1)"
+    >
+      <i class="bi bi-chevron-left"></i>
+    </button>
+  </nav>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal fade" tabindex="-1" ref="modalEl">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            {{ editMode ? "تعديل بيانات للهامش" : "إضافة بيانات للهامش" }}
+          </h5>
+        </div>
+
+        <form @submit.prevent="save">
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">رقم المذكرة</label>
+                <input
+                  v-model="form.memoNumber"
+                  class="form-control"
+                  required
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">تاريخ المذكرة</label>
+                <input
+                  v-model="form.memoDate"
+                  type="datetime-local"
+                  class="form-control"
+                  required
+                />
+              </div>
+
+              <div class="col-md-6">
+  <label class="form-label">هل يوجد ملف أصل؟</label>
+
+  <div class="custom-vue-select-container">
+    <VueSelect
+      v-model="form.hasOriginalFile"
+      :options="[
+        { label: 'نعم', value: true },
+        { label: 'لا', value: false }
+      ]"
+      label="label"
+      :reduce="(opt) => opt.value"
+      searchable
+      placeholder="اختر..."
+    />
+  </div>
+</div>
+
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light" @click="close()">
+              إلغاء
+            </button>
+            <button type="submit" class="btn btn-add">
+              {{ editMode ? "حفظ التعديل" : "إضافة" }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transfer Modal -->
+  <div class="modal fade" tabindex="-1" ref="transferModalEl">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">تحويل إلى قسم آخر</h5>
+        </div>
+
+        <form @submit.prevent="transfer">
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-12">
+  <label class="form-label">القسم</label>
+
+  <div class="custom-vue-select-container">
+    <VueSelect
+      v-model="transferForm.departmentId"
+      :options="departments"
+      label="name"
+      :reduce="(d) => d.id"
+      searchable
+      placeholder="اختر القسم..."
+      required
+    />
+  </div>
+</div>
+
+
+              <div class="col-md-12">
+                <label class="form-label">ملاحظات</label>
+                <textarea
+                  v-model="transferForm.notes"
+                  class="form-control"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              <div class="col-md-12">
+                <label class="form-label">المرفقات</label>
+                <input
+                  type="file"
+                  @change="handleFileUpload"
+                  class="form-control"
+                  multiple
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light" @click="closeTransfer()">
+              إلغاء
+            </button>
+            <button class="btn btn-primary" :disabled="transferLoading">
+              <span
+                v-if="transferLoading"
+                class="spinner-border spinner-border-sm me-1"
+              ></span>
+              تحويل
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Modal -->
+  <div class="modal fade" tabindex="-1" ref="viewModalEl">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">عرض تفاصيل بيانات الهامش</h5>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">تاريخ المذكرة</label>
+              <div class="form-control">{{ viewItem.memoNumber }}</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">تاريخ المذكرة</label>
+              <div class="form-control">
+                {{ formatDate(viewItem.memoDate) }}
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">ملف الأصل</label>
+              <div class="form-control">
+                <span v-if="viewItem.hasOriginalFile" class="badge bg-success">
+                  نعم
+                </span>
+                <span v-else class="badge bg-secondary"> لا </span>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">اسم المُدخل</label>
+              <div class="form-control">{{ viewItem.createdByUserName }}</div>
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label">تاريخ الإدخال</label>
+              <div class="form-control">
+                {{ formatDate(viewItem.createdAt) }}
+              </div>
+            </div>
+
+            <!-- <div class="col-md-12">
+              <label class="form-label">رقم هامش المذكرة </label>
+              <div class="view-box">{{ viewItem.marginNoteId }}</div>
+            </div> -->
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" @click="closeView">
+              إلغاء
+            </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Advanced Search Modal -->
+  <div
+    class="modal fade"
+    ref="advancedModal"
+    tabindex="-1"
+    @hidden.bs.modal="resetFilters"
+  >
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content shadow-sm border-0">
+        <!-- Header -->
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold primary">بحث متقدم</h5>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body">
+          <div class="row g-3">
+            <!-- الموضوع -->
+            <div class="col-md-6">
+              <label class="form-label">الموضوع</label>
+              <input
+                v-model="filters.subject"
+                class="form-control"
+                placeholder="موضوع الوارد..."
+              />
+            </div>
+
+            <!-- التشكيل -->
+            <!-- <div class="col-md-6">
+            <label class="form-label">التشكيل</label>
+            <div class="custom-vue-select-container">
+              <VueSelect
+                v-model="filters.formationId"
+                :options="formations"
+                label="name"
+                :reduce="(f) => f.id"
+                searchable
+                placeholder="اختر التشكيل..."
+              />
+            </div>
+          </div> -->
+            <div class="col-md-6">
+              <label class="form-label">المصدر</label>
+              <input
+                v-model="filters.source"
+                class="form-control"
+                placeholder="أدخل مصدر الكتاب..."
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">من تاريخ الوارد</label>
+              <input
+                v-model="filters.incomingDateFrom"
+                type="date"
+                class="form-control"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">إلى تاريخ الوارد</label>
+              <input
+                v-model="filters.incomingDateTo"
+                type="date"
+                class="form-control"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeAdvanced()">إغلاق</button>
+          <button class="btn btn-add" @click="applyAdvanced()">تطبيق</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive, onMounted, computed } from "vue";
+import bootstrap from "bootstrap/dist/js/bootstrap.bundle";
+import { Modal } from "bootstrap";
+import { useRoute } from "vue-router";
+import VueSelect from "vue3-select";
+import {
+  getLanda,
+  addLanda,
+  updateLanda,
+  deleteLanda,
+  transferLanda,
+  getLandaViwe,
+} from "@/services/Data-management.service.js";
+import { getDepartments } from "@/services/departments.service.js";
+import { successAlert, errorAlert, confirmDelete } from "@/utils/alert.js";
+
+const route = useRoute();
+const marginNoteId = ref(null);
+const list = ref([]);
+const loading = ref(false);
+
+// ===== الفلاتر =====
+// const filters = reactive({
+//   memoNumber: "",
+//   memoDateFrom: "",
+//   memoDateTo: "",
+//   hasOriginalFile: "",
+// });
+
+// ===== Pagination =====
+const page = ref(1);
+const pageSize = 10;
+const totalPages = ref(1);
+
+const visiblePages = computed(() => {
+  const pages = [];
+  let start = page.value - 1;
+  if (start < 1) start = 1;
+
+  let end = start + 2;
+  if (end > totalPages.value) {
+    end = totalPages.value;
+    start = Math.max(1, end - 2);
+  }
+
+  for (let i = start; i <= end; i++) pages.push(i);
+  return pages;
+});
+
+// ===== مودالات =====
+const modalEl = ref(null);
+const transferModalEl = ref(null);
+let modal = null;
+let transferModal = null;
+const editMode = ref(false);
+
+// ===== فورم الإضافة/التعديل =====
+const form = reactive({
+  id: "",
+  marginNoteId: null,
+  memoNumber: "",
+  memoDate: "",
+  hasOriginalFile: false,
+});
+
+const departments = ref([]);
+const transferForm = reactive({
+  landaId: "",
+  departmentId: "",
+  notes: "",
+  files: [],
+});
+
+const transferLoading = ref(false);
+const load = async () => {
+  loading.value = true;
+  try {
+    let hasOriginal = null;
+    if (filters.hasOriginalFile === "true") hasOriginal = true;
+    else if (filters.hasOriginalFile === "false") hasOriginal = false;
+
+    const res = await getLanda({
+      pageNumber: page.value,
+      pageSize,
+      memoNumber: filters.memoNumber || null,
+      memoDateFrom: filters.memoDateFrom || null,
+      memoDateTo: filters.memoDateTo || null,
+      hasOriginalFile: hasOriginal,
+      injuredName: filters.injuredName || null,
+      incomingId: filters.incomingId || null,
+      managerNote: filters.managerNote || null,
+      createdByUserId: filters.createdByUserId || null,
+      createdAtFrom: filters.createdAtFrom || null,
+      createdAtTo: filters.createdAtTo || null,
+    });
+
+    list.value = res.data.data;
+    totalPages.value = res.data.pagination?.totalPages ?? 1;
+  } catch (e) {
+    console.error(e);
+    errorAlert("فشل في جلب البيانات");
+  } finally {
+    loading.value = false;
+  }
+};
+
+const loadDepartments = async () => {
+  try {
+    const res = await getDepartments({ pageNumber: 1, pageSize: 100 });
+    departments.value = res.data.data;
+  } catch (error) {
+    console.error("Error loading departments:", error);
+  }
+};
+
+const openAdd = (noteId) => {
+  editMode.value = false;
+  form.id = "";
+  form.marginNoteId = noteId;
+  form.memoNumber = "";
+  form.memoDate = "";
+  form.hasOriginalFile = false;
+  modal.show();
+};
+
+const openEdit = (row) => {
+  editMode.value = true;
+  form.id = row.id;
+  form.marginNoteId = row.marginNoteId;
+  form.memoNumber = row.memoNumber;
+  form.memoDate = row.memoDate ? row.memoDate.slice(0, 10) : "";
+  form.hasOriginalFile = row.hasOriginalFile;
+  modal.show();
+};
+
+const save = async () => {
+  const data = {
+    marginNoteId: form.marginNoteId,
+    memoNumber: form.memoNumber,
+    memoDate: form.memoDate ? new Date(form.memoDate).toISOString() : null,
+    hasOriginalFile: form.hasOriginalFile,
+  };
+
+  try {
+    if (!editMode.value) {
+      await addLanda(data);
+      successAlert("تمت الإضافة بنجاح ");
+    } else {
+      await updateLanda(form.id, data);
+      successAlert("تم التحديث بنجاح ");
+    }
+
+    modal.hide();
+    load();
+  } catch (err) {
+    errorAlert("فشل الحفظ ");
+    console.error(err);
+  }
+};
+
+const remove = async (id) => {
+  const result = await confirmDelete();
+  if (result.isConfirmed) {
+    try {
+      await deleteLanda(id);
+      successAlert("تم الحذف بنجاح");
+      load();
+    } catch (e) {
+      errorAlert("فشل الحذف");
+    }
+  }
+};
+
+const close = () => modal.hide();
+const openTransfer = (row) => {
+  transferForm.landaId = row.id;
+  transferForm.departmentId = "";
+  transferForm.notes = "";
+  transferForm.files = [];
+  transferModal.show();
+  console.log("Landa ID SENT =", transferForm.landaId);
+};
+
+const handleFileUpload = (event) => {
+  transferForm.files = Array.from(event.target.files);
+};
+
+// ===== تنفيذ التحويل =====
+const transfer = async () => {
+  if (!transferForm.landaId) {
+    errorAlert("لا يوجد معرف للتحويل");
+    return;
+  }
+
+  transferLoading.value = true;
+
+  try {
+    const formData = new FormData();
+    formData.append("LandaId", transferForm.landaId);
+    formData.append("DepartmentId", transferForm.departmentId);
+    formData.append("Notes", transferForm.notes || "");
+
+    for (const file of transferForm.files) {
+      formData.append("files", file);
+    }
+
+    await transferLanda(formData);
+
+    successAlert(" تم التحويل بنجاح");
+    transferModal.hide();
+    load();
+  } catch (error) {
+    console.error(error);
+    errorAlert(" فشل التحويل");
+  } finally {
+    transferLoading.value = false;
+  }
+};
+
+const closeTransfer = () => transferModal.hide();
+const changePage = (p) => {
+  page.value = p;
+  load();
+};
+
+onMounted(() => {
+  modal = new Modal(modalEl.value);
+  transferModal = new Modal(transferModalEl.value);
+  viewModal = new Modal(viewModalEl.value);
+  load();
+  loadDepartments();
+});
+
+const loadViewData = async (marginNoteId) => {
+  const res = await getLandaViwe({
+    pageNumber: 1,
+    pageSize: 10,
+    marginNoteId: marginNoteId,
+  });
+
+  return res.data.data;
+};
+
+const openView = async (row) => {
+  try {
+    const data = await loadViewData(row.id);
+    if (!data || data.length === 0) {
+      errorAlert("لا توجد بيانات مرتبطة بهذا الهامش");
+      return;
+    }
+    const item = data[0];
+    viewItem.marginNoteId = item.marginNoteId;
+    viewItem.memoNumber = item.memoNumber;
+    viewItem.memoDate = item.memoDate;
+    viewItem.hasOriginalFile = item.hasOriginalFile;
+    viewItem.createdByUserName = item.createdByUserName;
+    viewItem.createdAt = item.createdAt;
+
+    viewModal.show();
+  } catch (e) {
+    console.error(e);
+    errorAlert("فشل عرض البيانات");
+  }
+};
+
+const viewModalEl = ref(null);
+let viewModal = null;
+const closeView = () => viewModal.hide();
+
+const viewItem = reactive({
+  memoNumber: "",
+  memoDate: "",
+  hasOriginalFile: false,
+  createdByUserName: "",
+  createdAt: "",
+  marginNoteId: "",
+});
+
+const filters = reactive({
+  injuredName: "",
+  incomingId: "",
+  managerNote: "",
+  createdByUserId: "",
+  createdAtFrom: "",
+  createdAtTo: "",
+  memoNumber: "",
+  memoDateFrom: "",
+  memoDateTo: "",
+  hasOriginalFile: "",
+  pageNumber: 1,
+  pageSize: 10,
+});
+
+const advancedModal = ref(null);
+let modalAdvancedInstance = null;
+const users = ref([
+  // { id: "uuid", fullName: "اسم الموظف" }
+]);
+
+const openAdvanced = () => {
+  modalAdvancedInstance = new bootstrap.Modal(advancedModal.value);
+  modalAdvancedInstance.show();
+};
+
+const closeAdvanced = () => {
+  modalAdvancedInstance.hide();
+};
+
+const applyAdvanced = () => {
+  load();
+  closeAdvanced();
+};
+
+const resetFilters = () => {
+  Object.assign(filters, {
+    injuredName: "",
+    incomingId: "",
+    managerNote: "",
+    createdByUserId: "",
+    createdAtFrom: "",
+    createdAtTo: "",
+    memoNumber: "",
+    memoDateFrom: "",
+    memoDateTo: "",
+    hasOriginalFile: "",
+  });
+  load();
+};
+
+const formatDate = (d) => {
+  if (!d) return "-";
+  const dt = new Date(d);
+  if (isNaN(dt.getTime())) return "-";
+  return new Intl.DateTimeFormat("en", {
+    // dateStyle: "medium",
+    // timeStyle: "short",
+  }).format(dt);
+};
+</script>

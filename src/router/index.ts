@@ -6,14 +6,13 @@ export const routes = [
   // صفحة تسجيل الدخول
   {
     path: `${baseUrl}/login`,
-    component: () => import("../layouts/Auth.vue")
-    , //  هذا الملف اللي أنشأناه
+    component: () => import("../layouts/Auth.vue"), //  هذا الملف اللي أنشأناه
     children: [
       {
         path: "",
         // name: "تسجيل الدخول",
-        component: () => import("@/views/Login.vue"), 
-      }
+        component: () => import("@/views/Login.vue"),
+      },
     ],
   },
 
@@ -26,13 +25,13 @@ export const routes = [
   //   ],
   // },
 
-  {
-    path: `${baseUrl}/about`,
-    component: () => import("@/layouts/Page.vue"),
-    children: [
-      { path: "", name: "لوحة ", component: () => import("@/views/About.vue") }
-    ],
-  },
+  // {
+  //   path: `${baseUrl}/about`,
+  //   component: () => import("@/layouts/Page.vue"),
+  //   children: [
+  //     { path: "", name: "لوحة ", component: () => import("@/views/About.vue") },
+  //   ],
+  // },
   // {
   //   path: `${baseUrl}/contacts`,
   //   component: () => import("@/layouts/Page.vue"),
@@ -45,28 +44,64 @@ export const routes = [
     path: `${baseUrl}/incoming`,
     component: () => import("@/layouts/Page.vue"),
     children: [
-      { path: "", name: "الوارد", component: () => import("@/views/Incoming.vue") },
+      {
+        path: "",
+        name: "وحدة البيانات",
+        component: () => import("@/views/Incoming.vue"),
+      },
     ],
   },
-  // {
-  //   path: `${baseUrl}/flow`,
-  //   component: () => import("@/layouts/Page.vue"),
-  //   children: [
-  //     {
-  //       path: "",
-  //       name: "التدقيق",
-  //       component: () => import("@/views/Flow.vue"),
-  //     },
-  //   ],
-  // },
+ 
   {
     path: `${baseUrl}/margin-note`,
     component: () => import("@/layouts/Page.vue"),
     children: [
-      { path: "", name: "الهامش الإداري", component: () => import("@/views/MarginNote.vue") },
+      {
+        path: "",
+        name: "الهامش الإداري",
+        component: () => import("@/views/MarginNote.vue"),
+      },
     ],
   },
- 
+
+  {
+    path: `${baseUrl}/data-management`,
+    component: () => import("@/layouts/Page.vue"),
+    children: [
+      {
+        path: "",
+        name: "الإدارة والمعلومات",
+        component: () => import("@/views/DataManagement.vue"),
+      },
+    ],
+  },
+
+  {
+    path: `${baseUrl}/flow`,
+    component: () => import("@/layouts/Page.vue"),
+    children: [
+      {
+        path: "",
+        name: "التدقيق",
+        component: () => import("@/views/FlowWrapper.vue"),
+      },
+    ],
+  },
+  {
+    path: `${baseUrl}/return-flow`,
+    component: () => import("@/layouts/Page.vue"),
+    children: [
+      {
+        path: "",
+        name: "الاسترجاع",
+        component: () => import("@/views/ReturnWrapper.vue"),
+      },
+    ],
+  },
+  
+  
+  
+  
   {
     path: `${baseUrl}/injury-supports`,
     component: () => import("@/layouts/Page.vue"),
@@ -78,39 +113,63 @@ export const routes = [
       },
     ],
   },
-  
   {
-    path: `${baseUrl}/departments`,
-    component: () => import("@/layouts/Page.vue"),
-    children: [
-      { path: "", name: "الشُعَب", component: () => import("@/views/Departments.vue") }
-    ],
-  },
-
-  {
-    path: `${baseUrl}/formations`,
+    path: `${baseUrl}/contacts`,
     component: () => import("@/layouts/Page.vue"),
     children: [
       {
         path: "",
-        name: "التشكيلات",
-        component: () => import("@/views/Formations.vue")
-      }
-    ],
-  },
-  {
-    path: `${baseUrl}/users`,
-    component: () => import("@/layouts/Page.vue"),
-    children: [
-      { path: "", name: "الحسابات", component: () => import("@/views/Users.vue") }
+        name: "إعدادات النظام",
+        component: () => import("@/views/Contacts.vue"),
+      },
     ],
   },
   
+  // {
+  //   path: `${baseUrl}/return-transactions`,
+  //   component: () => import("@/layouts/Page.vue"),
+  //   children: [
+  //     {
+  //       path: "",
+  //       name: " الاسترجاع",
+  //       component: () => import("@/views/ReturnTransactions.vue"),
+  //     },
+  //   ],
+  // },
+
+  // {
+  //   path: `${baseUrl}/departments`,
+  //   component: () => import("@/layouts/Page.vue"),
+  //   children: [
+  //     { path: "", name: "الشُعَب", component: () => import("@/views/Departments.vue") }
+  //   ],
+  // },
+
+  // {
+  //   path: `${baseUrl}/formations`,
+  //   component: () => import("@/layouts/Page.vue"),
+  //   children: [
+  //     {
+  //       path: "",
+  //       name: "التشكيلات",
+  //       component: () => import("@/views/Formations.vue")
+  //     }
+  //   ],
+  // },
+
+  // {
+  //   path: `${baseUrl}/users`,
+  //   component: () => import("@/layouts/Page.vue"),
+  //   children: [
+  //     { path: "", name: "الحسابات", component: () => import("@/views/Users.vue") }
+  //   ],
+  // },
+
   // أي مسار غير معروف → login
   {
     path: `${baseUrl}/:pathMatch(.*)*`,
     redirect: `${baseUrl}/login`,
-  }
+  },
 ];
 
 export const router = createRouter({
