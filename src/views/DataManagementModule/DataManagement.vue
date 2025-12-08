@@ -27,6 +27,7 @@
           v-model="filters.injuredName"
           class="form-control"
           placeholder="بحث بالاسم..."
+          @keyup.enter="load"
         />
       </div>
       <div class="col-md-6 d-flex justify-content-end gap-2 align-items-end">
@@ -56,35 +57,63 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>تاريح استلام المعاملة</th>
-                <th>اسم الجريح</th>
-                <th>موضوع الوارد</th>
-                <th>هامش المدير</th>
-                <th>تاريخ الكتاب</th>
-                <th>ملف الأصل</th>
+                <th>رقم المذكرة</th>
+                <th>تاريخ المذكرة</th>
+
+                <th>رقم الوارد</th>
+                <th>تاريخ الوارد</th>
+
+                <!-- <th>تاريخ الإدخال</th> -->
+
+                <th>حالة المعاملة</th>
+
+                <th>تاريخ الاستلام</th>
+                <th>سبب الرفض</th>
+                <th>تاريخ الرفض</th>
+
                 <th>الإجراءات</th>
               </tr>
             </thead>
 
             <tbody>
               <tr v-for="(m, i) in list" :key="m.id">
+                <!-- رقم تسلسلي -->
                 <td>{{ (page - 1) * pageSize + i + 1 }}</td>
-                <td>{{ formatDate(m.createdAt) }}</td>
-                <td>{{ m.injuredName }}</td>
-                <td>{{ m.incomingSubject }}</td>
-                <td>{{ m.managerNote }}</td>
-                <td>{{ formatDate(m.createdAt) }}</td>
-                <td>
-                  <span v-if="m.hasOriginalFile" class="badge bg-success"
-                    >نعم</span
-                  >
-                  <span v-else class="badge bg-secondary">لا</span>
-                </td>
 
+                <!-- memo -->
+                <td>{{ m.memoNumber }}</td>
+                <td>{{ formatDate(m.memoDate) }}</td>
+
+                <!-- incoming -->
+                <td>{{ m.incomingBookNumber ?? "-" }}</td>
+                <td>{{ formatDate(m.incomingDate) }}</td>
+
+                <!-- createdAt -->
+                <!-- <td>{{ formatDate(m.createdAt) }}</td> -->
+
+                <td>
+  <span v-if="m.status === 0" class="badge bg-secondary">
+    <i class="bi bi-hourglass-split"></i> قيد الانتظار
+  </span>
+
+  <span v-else-if="m.status === 1" class="badge bg-success">
+    <i class="bi bi-check-circle-fill"></i> مقبول
+  </span>
+
+  <span v-else-if="m.status === 2" class="badge bg-danger">
+    <i class="bi bi-x-circle-fill"></i> مرفوض
+  </span>
+</td>
+
+
+                <!-- تواريخ إضافية -->
+                <td>{{ formatDate(m.receiveDate) }}</td>
+                <td>{{ m.rejectionReason ?? "-" }}</td>
+                <td>{{ formatDate(m.rejectionDate) }}</td>
                 <td>
                   <div class="d-flex justify-content-center gap-2">
                     <!-- زر إضافة هامش -->
-                    <button class="button-add" @click="openAdd(m.id)">
+                    <button class="button-add" @click="openAdd(m.marginNoteId)">
                       <svg class="svgIcon" viewBox="0 0 448 512">
                         <path
                           d="M432 256c0 17.7-14.3 32-32 32h-128v128c0 17.7-14.3 32-32 
@@ -95,7 +124,7 @@
                       </svg>
                     </button>
                     <!-- تعديل -->
-                    <button class="button-edit" @click="openEdit(m.id)">
+                    <button class="button-edit" @click="openEdit(m)">
                       <svg class="svgIcon" viewBox="0 0 512 512">
                         <path
                           d="M290.74 93.24l-197.5 197.5c-2.5 2.5-4.1 
@@ -155,7 +184,7 @@
               </tr>
 
               <tr v-if="list.length === 0">
-                <td colspan="6" class="py-4 text-muted">
+                <td colspan="13" class="py-4 text-muted">
                   <i class="bi bi-inboxes fs-1 d-block mb-2"></i>
                   لا توجد بيانات
                 </td>
@@ -202,7 +231,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">
-            {{ editMode ? "تعديل بيانات للهامش" : "إضافة بيانات للهامش" }}
+            {{ editMode ? "تعديل بيانات " : "إضافة بيانات " }}
           </h5>
         </div>
 
@@ -222,30 +251,29 @@
                 <label class="form-label">تاريخ المذكرة</label>
                 <input
                   v-model="form.memoDate"
-                  type="datetime-local"
+                  type="date"
                   class="form-control"
                   required
                 />
               </div>
 
               <div class="col-md-6">
-  <label class="form-label">هل يوجد ملف أصل؟</label>
+                <label class="form-label">هل يوجد ملف أصل؟</label>
 
-  <div class="custom-vue-select-container">
-    <VueSelect
-      v-model="form.hasOriginalFile"
-      :options="[
-        { label: 'نعم', value: true },
-        { label: 'لا', value: false }
-      ]"
-      label="label"
-      :reduce="(opt) => opt.value"
-      searchable
-      placeholder="اختر..."
-    />
-  </div>
-</div>
-
+                <div class="custom-vue-select-container">
+                  <VueSelect
+                    v-model="form.hasOriginalFile"
+                    :options="[
+                      { label: 'نعم', value: true },
+                      { label: 'لا', value: false },
+                    ]"
+                    label="label"
+                    :reduce="(opt) => opt.value"
+                    searchable
+                    placeholder="اختر..."
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -274,21 +302,20 @@
           <div class="modal-body">
             <div class="row g-3">
               <div class="col-md-12">
-  <label class="form-label">القسم</label>
+                <label class="form-label">القسم</label>
 
-  <div class="custom-vue-select-container">
-    <VueSelect
-      v-model="transferForm.departmentId"
-      :options="departments"
-      label="name"
-      :reduce="(d) => d.id"
-      searchable
-      placeholder="اختر القسم..."
-      required
-    />
-  </div>
-</div>
-
+                <div class="custom-vue-select-container">
+                  <VueSelect
+                    v-model="transferForm.departmentId"
+                    :options="departments"
+                    label="name"
+                    :reduce="(d) => d.id"
+                    searchable
+                    placeholder="اختر القسم..."
+                    required
+                  />
+                </div>
+              </div>
 
               <div class="col-md-12">
                 <label class="form-label">ملاحظات</label>
@@ -312,7 +339,11 @@
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-light" @click="closeTransfer()">
+            <button
+              type="button"
+              class="btn btn-light"
+              @click="closeTransfer()"
+            >
               إلغاء
             </button>
             <button class="btn btn-primary" :disabled="transferLoading">
@@ -381,8 +412,8 @@
 
         <div class="modal-footer">
           <button type="button" class="btn btn-light" @click="closeView">
-              إلغاء
-            </button>
+            إلغاء
+          </button>
         </div>
       </div>
     </div>
@@ -545,11 +576,14 @@ const transferForm = reactive({
 const transferLoading = ref(false);
 const load = async () => {
   loading.value = true;
+
   try {
+    // تجهيز فلتر hasOriginalFile
     let hasOriginal = null;
     if (filters.hasOriginalFile === "true") hasOriginal = true;
     else if (filters.hasOriginalFile === "false") hasOriginal = false;
 
+    // جلب البيانات الأساسية (MarginNotes)
     const res = await getLanda({
       pageNumber: page.value,
       pageSize,
@@ -567,6 +601,33 @@ const load = async () => {
 
     list.value = res.data.data;
     totalPages.value = res.data.pagination?.totalPages ?? 1;
+
+    // ================================
+    //  دمج memoNumber + memoDate من API Landa
+    // ================================
+
+    await Promise.all(
+      list.value.map(async (row) => {
+        if (!row.id) return;
+
+        try {
+          const landaRes = await getLandaViwe({
+            marginNoteId: row.id, // نفس ID
+            pageNumber: 1,
+            pageSize: 1,
+          });
+
+          const landa = landaRes.data.data[0];
+
+          if (landa) {
+            row.memoNumber = landa.memoNumber;
+            row.memoDate = landa.memoDate;
+          }
+        } catch (err) {
+          console.error("خطأ في دمج بيانات Landa:", err);
+        }
+      })
+    );
   } catch (e) {
     console.error(e);
     errorAlert("فشل في جلب البيانات");
@@ -716,7 +777,9 @@ const openView = async (row) => {
   try {
     const data = await loadViewData(row.id);
     if (!data || data.length === 0) {
-      errorAlert("لا توجد بيانات مرتبطة بهذا الهامش");
+      errorAlert(
+        "لا توجد بيانات مرتبطة بهذا الهامش (رقم المذكرة و تاريخ المذكرة)"
+      );
       return;
     }
     const item = data[0];
@@ -802,9 +865,9 @@ const formatDate = (d) => {
   if (!d) return "-";
   const dt = new Date(d);
   if (isNaN(dt.getTime())) return "-";
-  return new Intl.DateTimeFormat("en", {
-    // dateStyle: "medium",
-    // timeStyle: "short",
-  }).format(dt);
+  const year = dt.getFullYear();
+  const month = String(dt.getMonth() + 1).padStart(2, "0");
+  const day = String(dt.getDate()).padStart(2, "0");
+  return `${year}/${month}/${day}`;
 };
 </script>

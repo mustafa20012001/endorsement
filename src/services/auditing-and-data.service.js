@@ -23,9 +23,12 @@ export const transferAuditingAndData = (data) => {
   return axios.post("/AuditingAndData/transfers", data);
 };
 
-
-
 // GET TRANSFERS LIST
 export const getTransfers = (params) => {
   return api.get("/AuditingAndData/transfers", { params });
 };
+
+export function changeStatusAuditing(body) {
+  return axios.post("/api/AuditingAndData/change-status", body);
+}
+

@@ -49,47 +49,39 @@
           </li>
         </ul>
 
-<!-- زر البروفايل -->
-<div class="profile-wrapper">
-  <div class="profile-btn" ref="profileBtn" @click="toggleProfile">
-  <i class="bi bi-person-fill"></i>
-</div>
+        <!-- زر البروفايل -->
+        <div class="profile-wrapper">
+          <div class="profile-btn" ref="profileBtn" @click="toggleProfile">
+            <i class="bi bi-person-fill"></i>
+          </div>
 
-<div v-if="showProfile" class="profile-card-new" ref="profileCard">
-  
-  <div class="arrow-up"></div>
+          <div v-if="showProfile" class="profile-card-new" ref="profileCard">
+            <div class="arrow-up"></div>
 
-  <div class="profile-header">
-    <div class="avatar">{{ user.fullName.charAt(0) }}</div>
-    <div class="name">{{ user.fullName }}</div>
-    <div class="username">@{{ user.userName }}</div>
-  </div>
+            <div class="profile-header">
+              <div class="avatar">{{ user.fullName.charAt(0) }}</div>
+              <div class="name">{{ user.fullName }}</div>
+              <div class="username">@{{ user.userName }}</div>
+            </div>
 
-  <div class="profile-info">
-    <div class="info-row">
-      <span class="label">القسم:</span>
-      <span class="value">{{ user.departmentName }}</span>
-    </div>
+            <div class="profile-info">
+              <div class="info-row">
+                <span class="label">القسم:</span>
+                <span class="value">{{ user.departmentName }}</span>
+              </div>
 
-    <div class="info-row">
-      <span class="label">الدور:</span>
-      <span class="value">{{ getRoleName(user.role) }}</span>
-    </div>
-  </div>
+              <div class="info-row">
+                <span class="label">الدور:</span>
+                <span class="value">{{ getRoleName(user.role) }}</span>
+              </div>
+            </div>
 
-  <button class="logout-btn-new" @click="logout">
-    <i class="bi bi-box-arrow-right me-1"></i>
-    تسجيل الخروج
-  </button>
-
-</div>
-
-
-</div>
-
-
-
-
+            <button class="logout-btn-new" @click="logout">
+              <i class="bi bi-box-arrow-right me-1"></i>
+              تسجيل الخروج
+            </button>
+          </div>
+        </div>
       </div>
     </nav>
   </div>
@@ -103,23 +95,22 @@ import { routes } from "@/router";
 const siteUrl = import.meta.env.VITE_BUILD_ADDRESS;
 const router = useRouter();
 
-// المسار النشط
+//Active Path
 const activeRoute = computed(() => router.currentRoute.value.path);
 const isActive = (path: string) => path === activeRoute.value;
 
-// فتح/غلق البروفايل
 const showProfile = ref(false);
 
-// مراجع DOM
+//  DOM
 const profileCard = ref<HTMLElement | null>(null);
 const profileBtn = ref<HTMLElement | null>(null);
 
-// زر فتح/غلق البروفايل
+//Profile open/close button
 const toggleProfile = () => {
   showProfile.value = !showProfile.value;
 };
 
-// إغلاق عند الضغط خارج البروفايل
+// Close when you click outside the profile
 const handleClickOutside = (e: MouseEvent) => {
   const card = profileCard.value;
   const btn = profileBtn.value;
@@ -136,7 +127,6 @@ const handleClickOutside = (e: MouseEvent) => {
   }
 };
 
-// تحميل بيانات المستخدم
 const user = ref({
   fullName: "",
   userName: "",
@@ -144,24 +134,25 @@ const user = ref({
   role: 0,
 });
 
-// تحويل الدور إلى نص
 const getRoleName = (role: number) => {
   switch (role) {
-    case 1: return "مدخل بيانات";
-    case 2: return "مدقق";
-    case 3: return "مدير نظام";
-    default: return "غير معروف";
+    case 1:
+      return "مدخل بيانات";
+    case 2:
+      return "مدقق";
+    case 3:
+      return "مدير نظام";
+    default:
+      return "غير معروف";
   }
 };
 
-// تسجيل الخروج
 const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("userData");
   router.push(`${siteUrl}/login`);
 };
 
-// عند تحميل الصفحة
 onMounted(() => {
   const raw = localStorage.getItem("userData");
   if (raw) user.value = JSON.parse(raw);
@@ -174,7 +165,6 @@ onUnmounted(() => {
   document.removeEventListener("click", handleClickOutside);
 });
 </script>
-
 
 <style lang="scss" scoped>
 .navbar {
@@ -227,7 +217,6 @@ onUnmounted(() => {
   transform: scaleX(1);
 }
 
-/* زر تسجيل الخروج */
 .logout-btn {
   border: 2px solid #e4e8ed;
   color: #1f1c1d;
@@ -285,7 +274,6 @@ onUnmounted(() => {
   z-index: 1;
 }
 
-/* حركة الدوران */
 @keyframes rotateBorder {
   0% {
     background-position: 0% 50%;
@@ -298,14 +286,12 @@ onUnmounted(() => {
   }
 }
 
-
-/* الحاوية */
 .profile-wrapper {
   position: relative;
   margin-right: 15px;
 }
 
-/* كارد البروفايل */
+/*  Profile card */
 .profile-card-new {
   position: absolute;
   top: 60px;
@@ -334,7 +320,6 @@ onUnmounted(() => {
   border-radius: 3px;
 }
 
-/* الهيدر */
 .profile-header {
   text-align: center;
   margin-bottom: 15px;
@@ -364,7 +349,6 @@ onUnmounted(() => {
   color: #777;
 }
 
-/* المعلومات */
 .profile-info {
   margin: 10px 0 15px 0;
 }
@@ -393,7 +377,6 @@ onUnmounted(() => {
   font-weight: 600;
 }
 
-/* زر تسجيل الخروج */
 .logout-btn-new {
   width: 100%;
   padding: 9px;
@@ -412,7 +395,6 @@ onUnmounted(() => {
   box-shadow: 0 4px 10px rgba(217, 83, 79, 0.25);
 }
 
-/* انيميشن */
 @keyframes fadeDrop {
   0% {
     opacity: 0;
@@ -424,7 +406,7 @@ onUnmounted(() => {
   }
 }
 
-/* زر البروفايل العصري */
+/* زر البروفايل  */
 .profile-btn {
   width: 46px;
   height: 46px;
@@ -453,7 +435,6 @@ onUnmounted(() => {
   transform: scale(0.92);
 }
 
-/*  تأثير نبض بسيط */
 .profile-btn::after {
   content: "";
   position: absolute;
@@ -464,5 +445,59 @@ onUnmounted(() => {
   animation: pulseBtn 2s infinite ease-out;
 }
 
+/* -----------------------------------------------------------
+       تنسيق خاص لشاشات iPad Mini و الشاشات المتوسطة
+----------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .navbar {
+    padding: 8px 10px !important;
+  }
 
+  .navbar-brand {
+    font-size: 1.3rem !important;
+  }
+
+  .navbar-nav {
+    gap: 0.3rem !important;
+  }
+
+  .nav-link {
+    padding: 6px 10px !important;
+    font-size: 0.9rem !important;
+  }
+
+  .profile-wrapper {
+    margin-right: 5px !important;
+  }
+
+  .profile-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1.4rem;
+  }
+}
+
+/* -----------------------------------------------------------
+      تنسيق إضافي لشاشات أصغر (مثل 768px)
+----------------------------------------------------------- */
+@media (max-width: 768px) {
+  .navbar-nav {
+    gap: 0.2rem !important;
+    flex-wrap: wrap;
+  }
+
+  .nav-link {
+    font-size: 0.85rem !important;
+    padding: 4px 8px !important;
+  }
+
+  .navbar-brand {
+    font-size: 1.2rem !important;
+  }
+
+  .profile-btn {
+    width: 38px;
+    height: 38px;
+  }
+}
 </style>

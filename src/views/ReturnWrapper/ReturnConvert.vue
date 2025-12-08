@@ -28,7 +28,8 @@
       </div>
 
       <!-- Table -->
-      <div v-else class="table-responsive">
+      <div class="card inner-card">
+        <div class="table-responsive">
         <table class="table custom-table text-center align-middle">
           <thead>
             <tr>
@@ -70,6 +71,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   </div>

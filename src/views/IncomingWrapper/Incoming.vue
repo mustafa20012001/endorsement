@@ -30,6 +30,7 @@
           v-model="filters.injuredName"
           class="form-control"
           placeholder="بحث بالاسم..."
+           @keyup.enter="load"
         />
       </div>
 
@@ -62,9 +63,9 @@
                 <th>#</th>
                 <th>اسم الجريح</th>
                 <th>التشكيل</th>
-                <th>رقم الكتاب</th>
+                <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
-                <th>هامش مسؤول الإدارة</th>
+                <th>هامش مدير القسم</th>
                 <th>الإجراءات</th>
               </tr>
             </thead>
@@ -72,7 +73,26 @@
             <tbody>
               <tr v-for="(inc, idx) in incomingList" :key="inc.id">
                 <td>{{ (page - 1) * pageSize + idx + 1 }}</td>
-                <td>{{ inc.injuredName }}</td>
+                <td>
+                  <div>
+                    <div
+                      v-for="(name, i) in inc.injuredNames.slice(0, 2)"
+                      :key="i"
+                    >
+                      • {{ name }}
+                    </div>
+
+                    <!-- زر عرض الكل -->
+                    <div
+                      v-if="inc.injuredNames.length > 2"
+                      class="show-more"
+                      @click="openNamesModal(inc.injuredNames)"
+                    >
+                      عرض الكل ({{ inc.injuredNames.length }})
+                    </div>
+                  </div>
+                </td>
+
                 <td>{{ inc.formationName }}</td>
                 <td>{{ inc.incomingBookNumber }}</td>
                 <td>{{ formatDate(inc.incomingDate) }}</td>
@@ -198,13 +218,37 @@
         <form @submit.prevent="save">
           <div class="modal-body">
             <div class="row g-3">
-              <div class="col-6">
-                <label class="form-label">اسم الجريح</label>
-                <input
-                  v-model="form.injuredName"
-                  class="form-control"
-                  required
-                />
+              <div class="col-12">
+                <label class="form-label">أسماء الجرحى</label>
+
+                <div class="tag-box">
+                  <div class="tags">
+                    <span
+                      v-for="(name, i) in form.injuredNames"
+                      :key="i"
+                      class="tag"
+                    >
+                      {{ name }}
+                      <span class="remove" @click="removeTag(i)">×</span>
+                    </span>
+
+                    <input
+                      ref="inputRef"
+                      v-model="tempName"
+                      @keydown.enter.stop.prevent="manualAddTag"
+                      class="tag-input-field"
+                      placeholder="اكتب اسم الجريح..."
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    class="tag-add-btn"
+                    @click="manualAddTag"
+                  >
+                    <i class="bi bi-plus-lg"></i>
+                  </button>
+                </div>
               </div>
 
               <div class="col-md-6">
@@ -222,7 +266,7 @@
               </div>
 
               <div class="col-md-6">
-                <label class="form-label">رقم الكتاب</label>
+                <label class="form-label">رقم الوارد</label>
                 <input
                   v-model="form.incomingBookNumber"
                   class="form-control"
@@ -234,7 +278,7 @@
                 <label class="form-label">تاريخ الوارد</label>
                 <input
                   v-model="form.incomingDate"
-                  type="datetime-local"
+                  type="date"
                   class="form-control"
                   required
                 />
@@ -248,8 +292,12 @@
                 <label class="form-label">المحتوى</label>
                 <input v-model="form.content" rows="3" class="form-control" />
               </div>
+              <!-- <div class="col-6">
+                <label class="form-label">هامش مدير القسم</label>
+                <input v-model="form.content" rows="3" class="form-control" />
+              </div> -->
               <div class="col-md-6">
-                <label class="form-label">ارسال الى الوحدة:</label>
+                <label class="form-label">ارسال الى :</label>
                 <div class="custom-vue-select-container">
                   <VueSelect
                     v-model="form.departmentIds"
@@ -392,7 +440,7 @@
 
         <div class="modal-footer">
           <button class="btn btn-light" @click="closeTransfer()">إلغاء</button>
-          <button class="btn btn-add" @click="submitTransfer()">ترحيل</button>
+          <button class="btn btn-add" @click="submitTransfer()">تحويل</button>
         </div>
       </div>
     </div>
@@ -409,8 +457,17 @@
         <div class="modal-body">
           <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label">اسم الجريح</label>
-              <input class="form-control" :value="view.injuredName" disabled />
+              <label class="form-label">أسماء الجرحى</label>
+
+              <div class="badges-box">
+                <span
+                  v-for="(name, i) in view.injuredNames"
+                  :key="i"
+                  class="badge-tag"
+                >
+                  {{ name }}
+                </span>
+              </div>
             </div>
 
             <div class="col-md-6">
@@ -423,7 +480,7 @@
             </div>
 
             <div class="col-md-6">
-              <label class="form-label">رقم الكتاب</label>
+              <label class="form-label">رقم الوارد</label>
               <input
                 class="form-control"
                 :value="view.incomingBookNumber"
@@ -477,10 +534,37 @@
       </div>
     </div>
   </div>
+
+  <!-- Names Modal (عرض كل الأسماء) -->
+  <div class="modal fade" tabindex="-1" ref="namesModal">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">أسماء الجرحى</h5>
+        </div>
+
+        <div class="modal-body">
+          <div
+            v-for="(name, i) in allNames"
+            :key="i"
+            class="name-item border-bottom py-2"
+          >
+            • {{ name }}
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeNamesModal()">
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, nextTick } from "vue";
 import { Modal } from "bootstrap";
 import { computed } from "vue";
 import VueSelect from "vue3-select";
@@ -538,6 +622,33 @@ const resetFilters = () => {
   filters.incomingBookNumber = "";
   filters.source = "";
   load();
+};
+
+const tempName = ref("");
+const inputRef = ref(null);
+
+const addTag = (newTag) => {
+  newTag = newTag.trim();
+  if (!newTag) return;
+
+  form.injuredNames.push(newTag);
+};
+
+const manualAddTag = async () => {
+  console.log("ENTER PRESSED:", tempName.value);
+
+  if (!tempName.value.trim()) return;
+
+  addTag(tempName.value);
+
+  tempName.value = "";
+
+  await nextTick();
+  inputRef.value?.focus();
+};
+
+const removeTag = (index) => {
+  form.injuredNames.splice(index, 1);
 };
 
 /* Load Data */
@@ -613,7 +724,7 @@ const editMode = ref(false);
 
 const form = reactive({
   id: "",
-  injuredName: "",
+  injuredNames: [],
   formationId: null,
   incomingBookNumber: "",
   incomingDate: "",
@@ -627,7 +738,7 @@ const openAdd = () => ((editMode.value = false), reset(), modal.show());
 const openEdit = (item) => {
   editMode.value = true;
   form.id = item.id;
-  form.injuredName = item.injuredName;
+  form.injuredNames = item.injuredNames || [];
   form.formationId = item.formationId;
   form.incomingBookNumber = item.incomingBookNumber;
   form.incomingDate = item.incomingDate;
@@ -649,7 +760,7 @@ const save = async () => {
     }
 
     modal.hide();
-    load(); 
+    load();
   } catch (e) {
     console.error("خطأ بالحفظ", e);
     errorAlert(" فشل الحفظ");
@@ -674,28 +785,28 @@ const changePage = (p) => ((page.value = p), load());
 /* Reset Form */
 const reset = () => {
   form.id = "";
-  form.injuredName = "";
+  form.injuredNames = [];
+  tempName.value = "";
   form.formationId = null;
-  form.formationName = "";
   form.subject = "";
   form.content = "";
   form.incomingDate = "";
   form.incomingBookNumber = "";
+  form.departmentIds = [];
+  tempName.value = "";
 };
 
 const close = () => modal.hide();
 
 /* Date Formatting */
 const formatDate = (d) => {
-  if (!d) return "—";
-
-  const date = new Date(d);
-  if (isNaN(date.getTime())) return "—";
-
-  return new Intl.DateTimeFormat("en-US", {
-    // dateStyle: "medium",
-    // timeStyle: "short",
-  }).format(date);
+  if (!d) return "-";
+  const dt = new Date(d);
+  if (isNaN(dt.getTime())) return "-";
+  const year = dt.getFullYear();
+  const month = String(dt.getMonth() + 1).padStart(2, "0");
+  const day = String(dt.getDate()).padStart(2, "0");
+  return `${year}/${month}/${day}`;
 };
 
 const transferModal = ref(null);
@@ -725,7 +836,7 @@ const handleFiles = (e) => {
 const submitTransfer = async () => {
   try {
     if (!transfer.incomingId || !transfer.departmentId) {
-      alert("يرجى اختيار الشعبة المراد الترحيل إليها.");
+      errorAlert("يرجى اختيار الشعبة المراد الترحيل إليها.");
       return;
     }
 
@@ -737,19 +848,25 @@ const submitTransfer = async () => {
     if (transfer.notes) {
       fd.append("Notes", transfer.notes);
     }
+
     if (transfer.files.length > 0) {
       transfer.files.forEach((f) => fd.append("files", f));
     }
+
+    // Debug (اختياري)
     for (let pair of fd.entries()) {
-      console.log(pair[0] + ": ", pair[1]);
+      console.log(pair[0] + ":", pair[1]);
     }
 
     await transferIncoming(fd);
+
+    successAlert("تم ترحيل المعاملة بنجاح");
 
     modalTransfer.hide();
     load();
   } catch (e) {
     console.log("خطأ في الترحيل", e);
+    errorAlert("حدث خطأ أثناء الترحيل");
   }
 };
 
@@ -768,10 +885,9 @@ const view = reactive({
   departmentNames: [],
 });
 
-
 const openView = (inc) => {
   view.id = inc.id;
-  view.injuredName = inc.injuredName;
+  view.injuredNames = inc.injuredNames || [];
   view.formationName = inc.formationName;
   view.incomingBookNumber = inc.incomingBookNumber;
   view.incomingDate = inc.incomingDate;
@@ -781,15 +897,30 @@ const openView = (inc) => {
 
   modalView.show();
 };
-
 const closeView = () => modalView.hide();
 
-/* Init */
+// ==============================
+//  Modal عرض كل أسماء الجرحى
+// ==============================
+const allNames = ref([]);
+const namesModal = ref(null);
+let namesModalInstance = null;
+
+const openNamesModal = (names) => {
+  allNames.value = names;
+  namesModalInstance.show();
+};
+
+const closeNamesModal = () => {
+  namesModalInstance.hide();
+};
+
 onMounted(() => {
   modal = new Modal(modalEl.value);
   modalAdv = new Modal(advancedModal.value);
   modalTransfer = new Modal(transferModal.value);
   modalView = new Modal(viewModal.value);
+  namesModalInstance = new Modal(namesModal.value);
   load();
   loadDepartments();
   loadFormations();

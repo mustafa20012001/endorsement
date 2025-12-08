@@ -270,7 +270,7 @@ body {
   padding: 0.6rem 1.5rem;
   font-size: 0.9rem;
   border-radius: 0.8rem;
-  background: #b2bfbf;
+  background: #727272;
   border: 1px solid #12b1d1;
   box-shadow: 6px 6px 12px #a8dbe4, -6px -6px 12px #ffffff;
 }
@@ -325,6 +325,77 @@ btn-light:active {
 .btn-light:hover:after {
   top: -45%;
   background-color: #b2bfbf !important;
+  transform: translateX(-50%) scaleY(1.3) scaleX(0.8);
+}
+
+
+/* .btn-confirmReject */
+/* ------------------------------ */
+.btn-confirmReject {
+  position: relative;
+  display: inline-block;
+  transition: all 0.2s ease-in;
+  overflow: hidden;
+  z-index: 1;
+  color: #fff;
+  padding: 0.6rem 1.5rem;
+  font-size: 0.9rem;
+  border-radius: 0.8rem;
+  background: #d42121;
+  border: 1px solid #b50c0c;
+  box-shadow: 6px 6px 12px #a8dbe4, -6px -6px 12px #ffffff;
+}
+
+btn-confirmReject:active {
+  color: #f1f1f1;
+  box-shadow: inset 4px 4px 12px #a8dbe4, inset -4px -4px 12px #ffffff;
+}
+
+.btn-confirmReject:hover {
+  background: #989090;
+}
+
+.btn-confirmReject:before,
+.btn-confirmReject:after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  border-radius: 50%;
+  display: block;
+  transition: all 0.5s 0.1s cubic-bezier(0.55, 0, 0.1, 1);
+  z-index: -1;
+}
+
+.btn-confirmReject:before {
+  transform: translateX(-50%) scaleY(1) scaleX(1.25);
+  top: 100%;
+  width: 140%;
+  height: 180%;
+  background-color: #b50c0c;
+}
+
+.btn-confirmReject:after {
+  transform: translateX(-50%) scaleY(1) scaleX(1.45);
+  top: 180%;
+  width: 160%;
+  height: 190%;
+  background-color: #b50c0c !important;
+}
+
+.btn-confirmReject:hover {
+  color: #fff;
+  border: 1px solid #b50c0c !important;
+}
+
+.btn-confirmReject:hover:before {
+  top: -35%;
+  background-color: #b50c0c !important;
+  transform: translateX(-50%) scaleY(1.3) scaleX(0.8);
+}
+
+.btn-confirmReject:hover:after {
+  top: -45%;
+  background-color: #b50c0c !important;
   transform: translateX(-50%) scaleY(1.3) scaleX(0.8);
 }
 
@@ -427,8 +498,8 @@ btn-light:active {
 
 /* زر الحذف */
 .button {
-  width: 50px;
-  height: 50px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
   background-color: rgb(206, 5, 5);
   border: none;
@@ -465,7 +536,7 @@ btn-light:active {
 
 .button::before {
   position: absolute;
-  top: -20px;
+  top: -25px;
   content: "حذف";
   color: white;
   transition-duration: .3s;
@@ -482,8 +553,8 @@ btn-light:active {
 
 /* زر التعديل */
 .button-edit {
-  width: 50px;
-  height: 50px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
   background-color: #12b1d1;
   border: none;
@@ -510,7 +581,7 @@ btn-light:active {
 
 .button-edit::before {
   position: absolute;
-  top: -20px;
+  top: -22px;
   content: "تعديل";
   color: white;
   transition-duration: .3s;
@@ -524,11 +595,11 @@ btn-light:active {
 }
 
 /* -------------------------------------------------------------
- زر الإرسال للإدارة (لون أزرق)
+ زر الإرسال 
 ------------------------------------------------------------- */
 .button-send {
-  width: 50px;
-  height: 50px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
   background: rgb(0, 132, 255); /* الأزرق */
   border: none;
@@ -586,8 +657,8 @@ btn-light:active {
 
 /* زر الإضافة */
 .button-add {
-  width: 50px;
-  height: 50px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
   background-color: #0d6efd; /* أزرق */
   border: none;
@@ -635,11 +706,116 @@ btn-light:active {
   transform: translateY(30px);
 }
 
+/* زر القبول */
+.button-accept {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background-color: rgb(25 135 84)
+  ; 
+  border: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.164);
+  cursor: pointer;
+  transition-duration: .3s;
+  overflow: hidden;
+  position: relative;
+}
+
+.button-accept .svgIcon {
+  width: 16px;
+  transition-duration: .3s;
+}
+
+.button-accept .svgIcon path {
+  fill: white;
+}
+
+.button-accept:hover {
+  border-radius: 50px;
+}
+
+.button-accept:hover .svgIcon {
+  width: 50px;
+  transform: translateY(60%);
+}
+
+.button-accept::before {
+  position: absolute;
+  top: -20px;
+  content: "قبول";
+  color: white;
+  transition-duration: .3s;
+  font-size: 2px;
+}
+
+.button-accept:hover::before {
+  font-size: 13px;
+  opacity: 1;
+  transform: translateY(30px);
+}
+
+
+/* زر الرفض */
+.button-reject {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background-color: #dc3545; 
+  border: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.164);
+  cursor: pointer;
+  transition-duration: .3s;
+  overflow: hidden;
+  position: relative;
+}
+
+.button-reject .svgIcon {
+  width: 16px;
+  transition-duration: .3s;
+}
+
+.button-reject .svgIcon path {
+  fill: white;
+}
+
+.button-reject:hover {
+  border-radius: 50px;
+}
+
+.button-reject:hover .svgIcon {
+  width: 50px;
+  transform: translateY(60%);
+}
+
+.button-reject::before {
+  position: absolute;
+  top: -22px;
+  content: "رفض";
+  color: white;
+  transition-duration: .3s;
+  font-size: 2px;
+}
+
+.button-reject:hover::before {
+  font-size: 13px;
+  opacity: 1;
+  transform: translateY(30px);
+}
+
+
 
 /* زر التحويل */
 .button-transfer {
-  width: 50px;
-  height: 50px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
   background-color: #4266c1f1; /* بنفسجي */
   border: none;
@@ -690,8 +866,8 @@ btn-light:active {
 
 /* زر العرض */
 .button-view {
-  width: 50px;
-  height: 50px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
   background-color: #565651; /* أخضر */
   border: none;
@@ -726,7 +902,7 @@ btn-light:active {
 
 .button-view::before {
   position: absolute;
-  top: -20px;
+  top: -25px;
   content: "عرض";
   color: white;
   transition-duration: .3s;
@@ -1203,11 +1379,11 @@ pagination
 }
 
 .badges-box {
-  background: #f8f9fa;
+  background: #ebecec;
   border: 1px solid #dcdcdc;
   padding: 10px;
-  border-radius: 8px;
-  min-height: 45px;
+  border-radius: 14px;
+  min-height: 35px;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -1222,6 +1398,21 @@ pagination
   border: 1px solid #ccc;
 }
 
+.badges-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.badge-tag {
+  background: #12b1d1ca;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+
 .custom-vue-select-container .vs__dropdown-toggle {
   border: 1px solid #dcdcdc !important;
   padding: 8px 14px;
@@ -1229,6 +1420,12 @@ pagination
   /* background: #fafafa !important; */
   min-height: 45px;
   transition: 0.2s;
+}
+
+.vs__dropdown-option--highlight {
+  background-color: #d9f3f7 !important;
+  color: #000 !important;
+  font-weight: 700;
 }
 
 .custom-vue-select-container .vs__dropdown-toggle:hover {
@@ -1548,7 +1745,6 @@ pagination
    تنسيق المرفقات
 ------------------------------------------------------------- */
 
-/* الصندوق العام */
 .attachments-box {
   background: rgba(255, 255, 255, 0.55);
   border: 1px solid rgba(18, 177, 209, 0.35);
@@ -1560,7 +1756,7 @@ pagination
     -4px -4px 10px rgba(255, 255, 255, 0.9);
 }
 
-/* العنوان */
+
 .attachments-title {
   font-weight: 700;
   font-size: 0.95rem;
@@ -1568,7 +1764,7 @@ pagination
   margin-bottom: 0.8rem;
 }
 
-/* عنصر المرفق */
+
 .attachment-item {
   background: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(18, 177, 209, 0.25);
@@ -1593,31 +1789,334 @@ pagination
     -4px -4px 12px rgba(255, 255, 255, 0.95);
 }
 
-/* اسم الملف */
 .file-name {
   font-size: 0.9rem;
   font-weight: 600;
   color: #333;
 }
 
-/* زر الحذف */
-.remove-file-btn {
+
+
+
+
+/* -------------------------------------------------------------
+اضافة جريح
+------------------------------------------------------------- */
+.tag-box {
+  display: flex;
+  align-items: center;
+  border: 1px solid #a5a4a4;
+  padding: 8px 12px;
+  border-radius: 14px;
+  flex-wrap: wrap;
+}
+
+.tags {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+}
+
+.tag {
+  background: #12b1d1;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: fadeIn 0.2s ease-in-out;
+}
+/* تأثير التحويم على الصندوق */
+.tag-box:hover {
+  border-color: #12b1d1;
+  background: #f0fcff;
+  transition: 0.25s ease-in-out;
+}
+
+/* عندما يكون الحقل (input) فوكس */
+.tag-input-field:focus {
+  outline: none;
   border: none;
-  background: #ff4d4d;
-  color: #fff;
-  padding: 0.3rem 0.7rem;
-  border-radius: 0.5rem;
-  font-size: 0.8rem;
+}
+
+/* حتى يظهر تأثير الفوكس بأناقة */
+.tag-box:focus-within {
+  border-color: #12b1d1;
+  box-shadow: 0 0 0 3px rgba(18, 177, 209, 0.2);
+  background: #f7fdff;
+  transition: 0.25s ease-in-out;
+}
+
+
+.tag .remove {
   cursor: pointer;
-
-  box-shadow:
-    2px 2px 6px rgba(255, 77, 77, 0.3),
-    -2px -2px 6px rgba(255, 255, 255, 0.8);
-
-  transition: 0.15s ease-in-out;
+  font-weight: bold;
+  opacity: 0.8;
 }
 
-.remove-file-btn:hover {
-  background: #d93636;
-  transform: scale(1.07);
+.tag .remove:hover {
+  opacity: 1;
 }
+
+.tag-input-field {
+  border: none;
+  outline: none;
+  font-size: 14px;
+  padding: 6px;
+  min-width: 140px;
+  flex-grow: 1;
+  background: transparent;
+}
+
+.tag-add-btn {
+  background: #12b1d1;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.tag-add-btn:hover {
+  background: #0b8ca8;
+}
+
+@keyframes fadeIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+
+/* 🔵 تنسيق Search Bar لشاشات كبيرة (الوضع الطبيعي لا تغيير) */
+
+
+/* -----------------------------------------------------------
+      📱 شاشات أقل من 1024px (مثل iPad Mini)
+----------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .card .row.g-3 {
+    align-items: center;
+  }
+
+  .card .col-md-6 {
+    width: 100%;
+  }
+
+  /* تكبير حقل البحث قليلاً */
+  .card input.form-control {
+    font-size: 0.95rem;
+    padding: 10px 14px;
+  }
+
+  /* الأزرار تكون بمحاذاة اليمين كامل */
+  .card .d-flex {
+    justify-content: center !important;
+    margin-top: 5px;
+  }
+
+  .btn-search,
+  .btn-advanced {
+    font-size: 0.9rem;
+    padding: 8px 14px;
+  }
+}
+
+
+/* -----------------------------------------------------------
+     شاشات أقل من 768px (موبايل كبير)
+----------------------------------------------------------- */
+@media (max-width: 768px) {
+  .card .row.g-3 {
+    row-gap: 10px;
+  }
+
+  /* الحقل ياخذ عرض كامل */
+  .card input.form-control {
+    width: 100%;
+  }
+
+  /* الأزرار تصبح تحت بعض بشكل جميل */
+  .card .d-flex {
+    flex-wrap: wrap;
+    justify-content: center !important;
+    gap: 8px;
+  }
+
+  .btn-search,
+  .btn-advanced {
+    width: 100%;
+    padding: 10px;
+    font-size: 0.95rem;
+  }
+}
+
+/* -----------------------------------------------------------
+      شاشات أقل من480px (موبايل صغير)
+----------------------------------------------------------- */
+@media (max-width: 480px) {
+  .btn-search,
+  .btn-advanced {
+    font-size: 0.85rem;
+    padding: 8px;
+  }
+
+  .card input.form-control {
+    font-size: 0.85rem;
+  }
+}
+
+/* -----------------------------------------------------------
+     nav-2
+----------------------------------------------------------- */
+.flow-nav {
+  background: #12b1d1d6;
+  padding: 10px 20px;
+  border-radius: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  color: white;
+}
+.left-side {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.left-icon {
+  background: #12b1d1d6;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.title-badge {
+  background: white;
+  color: black;
+  font-weight: 700;
+  padding: 6px 18px;
+  border-radius: 10px;
+}
+.center-links {
+  display: flex;
+  gap: 25px;
+  margin: 0 auto;
+}
+.nav-item {
+  cursor: pointer;
+  font-weight: 700;
+  padding-bottom: 10px;
+  transition: 0.3s ease;
+}
+.nav-item.active {
+  padding: 5px 22px;
+  background: white;
+  color: black;
+  border-radius: 20px;
+}
+
+
+.show-more {
+  color: #12b1d1;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.show-more:hover {
+  text-decoration: underline;
+}
+
+.name-item {
+  font-size: 15px;
+  padding: 6px 0;
+}
+
+
+.flow-nav .nav-item {
+  cursor: pointer;
+  font-weight: 700;
+  position: relative;
+  padding-bottom: 10px;
+  transition: 0.3s ease;
+}
+
+.flow-nav .nav-item::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 3px;
+  background: white;
+  border-radius: 2px;
+  transform: translateX(-50%);
+  transition: 0.3s ease;
+}
+
+.flow-nav .nav-item:hover::after {
+  width: 60%;
+}
+
+.flow-nav .active {
+  opacity: 1;
+  padding: 5px 22px;
+  background: white;
+  color: black;
+  border-radius: 20px;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(255, 255, 255, 0.2);
+}
+
+/* -----------------------------------------------------------
+     status
+----------------------------------------------------------- */
+
+.status-glass {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: #fff;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: transform 0.15s ease-in-out, box-shadow 0.2s;
+  cursor: default;
+}
+
+.status-glass:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.28);
+}
+
+/* Pending – Gray Glass */
+.status-glass.pending {
+  background: linear-gradient(135deg, #6c757d77, #adb5bd55);
+}
+
+/* Accepted – Green Gradient */
+.status-glass.accepted {
+  background: linear-gradient(135deg, #12d18b, #0ea96b);
+}
+
+/* Rejected – Red Gradient */
+.status-glass.rejected {
+  background: linear-gradient(135deg, #ff4d4d, #c82333);
+}
+
+.status-glass i {
+  font-size: 1rem;
+}
+

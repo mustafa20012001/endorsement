@@ -63,8 +63,8 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>اسم الجريح</th>
-                <th>اللواء</th>
+                <!-- <th>اسم الجريح</th> -->
+                <!-- <th>اللواء</th> -->
                 <th>رقم الكتاب</th>
                 <th>تاريخ الاسترجاع</th>
                 <th>المرفقات</th>
@@ -75,7 +75,7 @@
             <tbody>
               <tr v-for="(item, i) in list" :key="item.id">
                 <td>{{ (page - 1) * pageSize + i + 1 }}</td>
-                <td>{{ item.injuredName }}</td>
+                <!-- <td>{{ item.injuredName }}</td> -->
                 <td>{{ item.formationName }}</td>
                 <td>{{ item.bookNumber }}</td>
                 <td>{{ formatDate(item.returnDate) }}</td>
@@ -168,7 +168,7 @@
                 />
               </div>
 
-              <div class="col-md-6">
+              <!-- <div class="col-md-6">
                 <label class="form-label">اللواء</label>
                 <select v-model="form.formationId" class="form-select" required>
                   <option value="">اختر اللواء</option>
@@ -180,7 +180,7 @@
                     {{ formation.name }}
                   </option>
                 </select>
-              </div>
+              </div> -->
 
               <div class="col-md-6">
                 <label class="form-label">رقم الكتاب</label>
@@ -194,6 +194,15 @@
 
               <div class="col-md-6">
                 <label class="form-label">نسبة الاسترجاع</label>
+                <input
+                  v-model="form.returnPercentage"
+                  type="text"
+                  class="form-control"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">سبب الاسترجاع</label>
                 <input
                   v-model="form.returnPercentage"
                   type="text"
@@ -292,7 +301,7 @@
           </div>
 
           <div class="modal-footer">
-            <button class="btn btn-light" @click="close" :disabled="saving">
+            <button type="button" class="btn btn-light" @click="close" :disabled="saving">
               إلغاء
             </button>
             <button class="btn btn-add" :disabled="saving">
@@ -323,7 +332,7 @@
               <input v-model="filters.injuredName" class="form-control" />
             </div> -->
 
-            <div class="col-md-6">
+            <!-- <div class="col-md-6">
               <label class="form-label">اللواء</label>
               <select v-model="filters.formation" class="form-select">
                 <option value="">الكل</option>
@@ -335,7 +344,7 @@
                   {{ formation.name }}
                 </option>
               </select>
-            </div>
+            </div> -->
 
             <div class="col-md-6">
               <label class="form-label">رقم الكتاب</label>
@@ -363,7 +372,7 @@
         </div>
 
         <div class="modal-footer">
-          <button class="btn btn-light" @click="closeAdvanced()">إغلاق</button>
+          <button class="btn btn-light" @click="closeAdvanced()">إلغاء</button>
           <button class="btn btn-add" @click="applyAdvanced()">تطبيق</button>
         </div>
       </div>
@@ -461,7 +470,7 @@
           </div>
         </div>
         <div class="modal-footer bg-light">
-          <button class="btn btn-light" @click="closeFilesModal">إغلاق</button>
+          <button type="button" class="btn btn-light" @click="closeFilesModal">إلغاء</button>
         </div>
       </div>
     </div>

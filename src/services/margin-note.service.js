@@ -29,3 +29,7 @@ export const transferMarginNote = (formData) => {
     }
   });
 };
+
+export const changeMarginNoteStatus = (data) => {
+  return axios.post("/MarginNotes/change-status", data);
+};

@@ -25,6 +25,7 @@
           v-model="filters.injuredName"
           class="form-control"
           placeholder="بحث بالاسم..."
+          @keyup.enter="load"
         />
       </div>
 
@@ -58,33 +59,39 @@
                 <th>#</th>
                 <th>اسم الجريح</th>
                 <th>موضوع الوارد</th>
-                <th>تاريخ استلام المعاملة</th>
-                <th>تاريخ تسليم المعاملة</th>
-                <th>تاريخ استلام الطبيب العسكري</th>
-                <th>تاريخ تسليم الطبيب العسكري</th>
-                <th>تاريخ استلام التدقيق</th>
-                <th>تاريخ تسليم التدقيق</th>
-                <th>الموقف</th>
+                <th>رقم الكتاب</th>
+                <th>تاريخ الوارد</th>
+                <th>استلام المعاملة</th>
+                <th>تسليم المعاملة</th>
+                <th>استلام الطبيب العسكري</th>
+                <th>تسليم الطبيب العسكري</th>
+                <th>استلام التدقيق</th>
+                <th>تاريخ إرسال التدقيق</th>
+                <th>المواقف</th>
                 <th>الملاحظات</th>
+                <th>الحالة</th>
+                <th>سبب الرفض</th>
+                <th>تاريخ الرفض</th>
                 <th>أضيف بواسطة</th>
                 <th>تاريخ الإضافة</th>
                 <th>الإجراءات</th>
               </tr>
             </thead>
-
             <tbody>
               <tr v-for="(item, idx) in list" :key="item.id">
-                <td>{{ (page - 1) * pageSize + idx + 1 }}</td>
+                <td>{{ idx + 1 }}</td>
                 <td>{{ item.injuredName || "-" }}</td>
-                <td>{{ item.incomingSubject }}</td>
+                <td>{{ item.incomingSubject || "-" }}</td>
+                <td>{{ item.incomingBookNumber || "-" }}</td>
+                <td>{{ formatDate(item.incomingDate) }}</td>
                 <td>{{ formatDate(item.transactionReceiveDate) }}</td>
                 <td>{{ formatDate(item.transactionDeliveryDate) }}</td>
                 <td>{{ formatDate(item.militaryDoctorReceive) }}</td>
                 <td>{{ formatDate(item.militaryDoctorDelivery) }}</td>
                 <td>{{ formatDate(item.verificationReceive) }}</td>
-                <td>{{ formatDate(item.verificationDelivery) }}</td>
+                <td>{{ formatDate(item.verificationSendDate) }}</td>
                 <td>
-                  <div v-if="item.situations && item.situations.length">
+                  <div v-if="item.situations?.length">
                     <span
                       v-for="(s, i) in item.situations"
                       :key="i"
@@ -95,12 +102,33 @@
                   </div>
                   <span v-else class="text-muted">-</span>
                 </td>
+
                 <td class="text-truncate" style="max-width: 180px">
                   {{ item.notes || "-" }}
                 </td>
+                <!-- الحالة -->
+                <td>
+                  <span v-if="item.status === 0" class="badge bg-secondary">
+                    <i class="bi bi-hourglass-split"></i>
+                    قيد الانتظار
+                  </span>
+
+                  <span v-else-if="item.status === 1" class="badge bg-success">
+                    <i class="bi bi-check-circle-fill"></i>
+                    مقبول
+                  </span>
+
+                  <span v-else-if="item.status === 2" class="badge bg-danger">
+                    <i class="bi bi-x-circle-fill"></i>
+                    مرفوض
+                  </span>
+                </td>
+                <!-- سبب الرفض -->
+                <td>{{ item.rejectionReason || "-" }}</td>
+                <!-- تاريخ الرفض -->
+                <td>{{ formatDate(item.rejectionDate) }}</td>
                 <td>{{ item.createdByUserName }}</td>
                 <td>{{ formatDate(item.createdAt) }}</td>
-
                 <td>
                   <div class="d-flex justify-content-center gap-2">
                     <!-- عرض -->
@@ -120,9 +148,17 @@
                       </svg>
                     </button>
 
-                    <!-- <button class="btn btn-primary" @click="openAdd()">
-                      إضافة تدقيق جديد
-                    </button> -->
+                    <button class="button-add" @click="openAdd(item)">
+                      <svg class="svgIcon" viewBox="0 0 448 512">
+                        <path
+                          d="M432 256c0 17.7-14.3 32-32 32h-128v128c0 17.7-14.3 
+                             32-32 32s-32-14.3-32-32V288H80c-17.7 
+                             0-32-14.3-32-32s14.3-32 32-32h128V96c0-17.7 
+                             14.3-32 32-32s32 14.3 32 32v128h128c17.7 
+                             0 32 14.3 32 32z"
+                        />
+                      </svg>
+                    </button>
 
                     <!-- تعديل -->
                     <button class="button-edit" @click="openEdit(item)">
@@ -138,7 +174,6 @@
                         />
                       </svg>
                     </button>
-
                     <!-- حذف -->
                     <button class="button" @click="remove(item.id)">
                       <svg class="svgIcon" viewBox="0 0 448 512">
@@ -222,112 +257,148 @@
 
         <form @submit.prevent="save">
           <div class="modal-body">
+            <!-- بيانات الجريح -->
+            <div class="return-info-box mb-4">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="info-row">
+                    <span class="info-icon"
+                      ><i class="bi bi-person-fill"></i
+                    ></span>
+                    <div class="info-text">
+                      <span class="label">اسم الجريح</span>
+                      <span class="value">{{ form.injuredName || "-" }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="info-row">
+                    <span class="info-icon"
+                      ><i class="bi bi-journal-text"></i
+                    ></span>
+                    <div class="info-text">
+                      <span class="label">موضوع الوارد</span>
+                      <span class="value">{{
+                        form.incomingSubject || "-"
+                      }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ID المخفي -->
+            <input type="hidden" v-model="form.incomingId" />
+
+            <!-- الحقول -->
             <div class="row g-3">
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <label class="form-label">تاريخ استلام المعاملة</label>
                 <input
-                  v-model="form.transactionReceiveDate"
                   type="date"
+                  v-model="form.transactionReceiveDate"
                   class="form-control"
-                  required
                 />
               </div>
 
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <label class="form-label">تاريخ تسليم المعاملة</label>
                 <input
+                  type="date"
                   v-model="form.transactionDeliveryDate"
-                  type="date"
                   class="form-control"
                 />
               </div>
 
-              <div class="col-md-4">
-                <label class="form-label">تاريخ استلام الطبيب العسكري</label>
+              <div class="col-md-6">
+                <label class="form-label">استلام الطبيب العسكري</label>
                 <input
+                  type="date"
                   v-model="form.militaryDoctorReceive"
-                  type="date"
                   class="form-control"
                 />
               </div>
 
-              <div class="col-md-4">
-                <label class="form-label">تاريخ تسليم الطبيب العسكري</label>
+              <div class="col-md-6">
+                <label class="form-label">تسليم الطبيب العسكري</label>
                 <input
+                  type="date"
                   v-model="form.militaryDoctorDelivery"
-                  type="date"
                   class="form-control"
                 />
               </div>
 
-              <div class="col-md-4">
-                <label class="form-label">تاريخ استلام لجنة التدقيق</label>
+              <div class="col-md-6">
+                <label class="form-label">تاريخ استلام التدقيق</label>
                 <input
+                  type="date"
                   v-model="form.verificationReceive"
-                  type="date"
                   class="form-control"
                 />
               </div>
 
-              <div class="col-md-4">
-                <label class="form-label">تاريخ تسليم لجنة التدقيق</label>
+              <div class="col-md-6">
+                <label class="form-label">تاريخ تسليم التدقيق</label>
                 <input
-                  v-model="form.verificationDelivery"
                   type="date"
+                  v-model="form.verificationDelivery"
                   class="form-control"
                 />
               </div>
 
               <div class="col-md-12">
                 <label class="form-label">الملاحظات</label>
-                <textarea
-                  v-model="form.notes"
-                  class="form-control"
-                  rows="3"
-                  placeholder="ملاحظات حول حالة المعاملة..."
-                ></textarea>
+                <textarea v-model="form.notes" class="form-control"></textarea>
               </div>
+            </div>
 
-              <div class="col-12">
-                <label class="form-label mb-2">الموقف </label>
+            <!-- قسم المواقف -->
+            <div class="mt-4 situations-box">
+              <h6 class="fw-bold mb-3">المواقف</h6>
 
-                <div class="situations-wrapper">
-                  <div
-                    class="situation-chip"
-                    v-for="(s, i) in form.situations"
-                    :key="i"
-                  >
-                    <input
-                      v-model="s.situationNumber"
-                      class="chip-input number"
-                      placeholder="رقم"
-                    />
-                    <input
-                      v-model="s.situationName"
-                      class="chip-input name"
-                      placeholder="اسم الموقف..."
-                    />
+              <div
+                class="row g-3 mb-3 situation-item"
+                v-for="(s, i) in form.situations"
+                :key="i"
+              >
+                <div class="col-md-3">
+                  <label class="small-label">رقم الموقف</label>
+                  <input
+                    v-model="s.situationNumber"
+                    class="form-control"
+                    placeholder="رقم الموقف"
+                  />
+                </div>
 
-                    <button
-                      type="button"
-                      class="chip-remove"
-                      @click="removeSituationRow(i)"
-                      :disabled="form.situations.length === 1"
-                    >
-                      <i class="bi bi-x-lg"></i>
-                    </button>
-                  </div>
+                <div class="col-md-8">
+                  <label class="small-label">اسم الموقف</label>
+                  <input
+                    v-model="s.situationName"
+                    class="form-control"
+                    placeholder="اسم الموقف"
+                  />
+                </div>
 
-                  <!-- زر الإضافة -->
+                <div class="col-md-1 d-flex align-items-end">
                   <button
                     type="button"
-                    class="chip-add"
-                    @click="addSituationRow"
+                    class="btn btn-danger btn-sm remove-btn"
+                    @click="removeSituationRow(i)"
+                    :disabled="form.situations.length === 1"
                   >
-                    <i class="bi bi-plus-circle"></i> إضافة موقف
+                    <i class="bi bi-x-lg"></i>
                   </button>
                 </div>
               </div>
+
+              <button
+                type="button"
+                class="btn btn-add btn-sm px-4"
+                @click="addSituationRow"
+              >
+                <i class="bi bi-plus-lg"></i> إضافة موقف
+              </button>
             </div>
           </div>
 
@@ -749,13 +820,15 @@ const loadDepartments = async () => {
 };
 
 // ===== إضافة =====
-const openAdd = () => {
+const openAdd = (row) => {
   editMode.value = false;
 
-  // تفريغ كل الحقول
   Object.assign(form, {
     id: "",
-    incomingId: incomingIdFromRoute || null,
+    incomingId: row?.incomingId || incomingIdFromRoute || null,
+    injuredName: row?.injuredName || "",
+    incomingSubject: row?.incomingSubject || "",
+
     transactionReceiveDate: "",
     transactionDeliveryDate: "",
     militaryDoctorReceive: "",
@@ -763,12 +836,7 @@ const openAdd = () => {
     verificationReceive: "",
     verificationDelivery: "",
     notes: "",
-    situations: [
-      {
-        situationNumber: "1",
-        situationName: "",
-      },
-    ],
+    situations: [{ situationNumber: "1", situationName: "" }],
   });
 
   modal.show();
@@ -781,34 +849,34 @@ const openEdit = (row) => {
   Object.assign(form, {
     id: row.id,
     incomingId: row.incomingId || incomingIdFromRoute || null,
+
+    injuredName: row.injuredName || "",
+    incomingSubject: row.incomingSubject || "",
+
     transactionReceiveDate: row.transactionReceiveDate
-      ? row.transactionReceiveDate.slice(0, 10)
+      ? row.transactionReceiveDate.slice(0, 16)
       : "",
     transactionDeliveryDate: row.transactionDeliveryDate
-      ? row.transactionDeliveryDate.slice(0, 10)
+      ? row.transactionDeliveryDate.slice(0, 16)
       : "",
     militaryDoctorReceive: row.militaryDoctorReceive
-      ? row.militaryDoctorReceive.slice(0, 10)
+      ? row.militaryDoctorReceive.slice(0, 16)
       : "",
     militaryDoctorDelivery: row.militaryDoctorDelivery
-      ? row.militaryDoctorDelivery.slice(0, 10)
+      ? row.militaryDoctorDelivery.slice(0, 16)
       : "",
     verificationReceive: row.verificationReceive
-      ? row.verificationReceive.slice(0, 10)
+      ? row.verificationReceive.slice(0, 16)
       : "",
     verificationDelivery: row.verificationDelivery
-      ? row.verificationDelivery.slice(0, 10)
+      ? row.verificationDelivery.slice(0, 16)
       : "",
+
     notes: row.notes || "",
     situations: row.situations?.map((s, i) => ({
       situationNumber: s.situationNumber || String(i + 1),
       situationName: s.situationName || "",
-    })) || [
-      {
-        situationNumber: "1",
-        situationName: "",
-      },
-    ],
+    })) || [{ situationNumber: "1", situationName: "" }],
   });
 
   modal.show();
@@ -947,11 +1015,10 @@ const formatDate = (d) => {
   if (!d) return "-";
   const dt = new Date(d);
   if (isNaN(dt.getTime())) return "-";
-  return new Intl.DateTimeFormat("en", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(dt);
+  const year = dt.getFullYear();
+  const month = String(dt.getMonth() + 1).padStart(2, "0");
+  const day = String(dt.getDate()).padStart(2, "0");
+  return `${year}/${month}/${day}`;
 };
 
 // ===== تغيير الصفحة =====

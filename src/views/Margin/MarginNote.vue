@@ -24,7 +24,8 @@
         <input
           v-model="filters.injuredName"
           class="form-control"
-          placeholder="بحث بالاسم..."
+          placeholder=" بحث بالاسم..."
+          @keyup.enter="load"
         />
       </div>
 
@@ -60,7 +61,7 @@
                 <th>تاريح استلام المعاملة</th>
                 <th>اسم الجريح</th>
                 <th>موضوع الوارد</th>
-                <th>هامش المدير</th>
+                <th>هامش مدير القسم</th>
                 <th>تاريخ الكتاب</th>
                 <th>ملف الأصل</th>
                 <th>الإجراءات</th>
@@ -71,7 +72,22 @@
               <tr v-for="(m, i) in list" :key="m.id">
                 <td>{{ (page - 1) * pageSize + i + 1 }}</td>
                 <td>{{ formatDate(m.createdAt) }}</td>
-                <td>{{ m.injuredName }}</td>
+                <td>
+                  <div>
+                    <!-- عرض أول اسم فقط -->
+                    <div>{{ m.injuredNames?.[0] }}</div>
+
+                    <!-- إذا يوجد أكثر من اسم -->
+                    <div
+                      v-if="m.injuredNames && m.injuredNames.length > 1"
+                      class="show-more"
+                      @click="openNamesModal(m.injuredNames)"
+                    >
+                      عرض الكل ({{ m.injuredNames.length }})
+                    </div>
+                  </div>
+                </td>
+
                 <td>{{ m.incomingSubject }}</td>
                 <td>{{ m.managerNote }}</td>
                 <td>{{ formatDate(m.createdAt) }}</td>
@@ -204,22 +220,22 @@
               </div>
 
               <div class="col-md-6">
-  <label class="form-label">هل يوجد ملف أصل؟</label>
+                <label class="form-label">هل يوجد ملف أصل؟</label>
 
-  <div class="custom-vue-select-container">
-    <VueSelect
-      v-model="form.hasOriginalFile"
-      :options="[
-        { label: 'نعم', value: true },
-        { label: 'لا', value: false }
-      ]"
-      label="label"
-      :reduce="(opt) => opt.value"
-      searchable
-      placeholder="اختر الحالة..."
-    />
-  </div>
-</div>
+                <div class="custom-vue-select-container">
+                  <VueSelect
+                    v-model="form.hasOriginalFile"
+                    :options="[
+                      { label: 'نعم', value: true },
+                      { label: 'لا', value: false },
+                    ]"
+                    label="label"
+                    :reduce="(opt) => opt.value"
+                    searchable
+                    placeholder="اختر الحالة..."
+                  />
+                </div>
+              </div>
 
               <div class="col-md-6">
                 <label class="form-label">إرسال إلى الوحدة:</label>
@@ -263,19 +279,19 @@
           <div class="modal-body">
             <div class="row g-3">
               <div class="col-md-12">
-  <label class="form-label">القسم</label>
+                <label class="form-label">القسم</label>
 
-  <div class="custom-vue-select-container">
-    <VueSelect
-      v-model="transferForm.departmentId"
-      :options="departments"
-      label="name"
-      :reduce="(d) => d.id"
-      searchable
-      placeholder="اختر القسم..."
-    />
-  </div>
-</div>
+                <div class="custom-vue-select-container">
+                  <VueSelect
+                    v-model="transferForm.departmentId"
+                    :options="departments"
+                    label="name"
+                    :reduce="(d) => d.id"
+                    searchable
+                    placeholder="اختر القسم..."
+                  />
+                </div>
+              </div>
 
               <div class="col-md-12">
                 <label class="form-label">ملاحظات</label>
@@ -366,6 +382,33 @@
       </div>
     </div>
   </div>
+
+  <!-- Names Modal – عرض كل أسماء الجرحى -->
+  <div class="modal fade" tabindex="-1" ref="namesModalEl">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">أسماء الجرحى</h5>
+        </div>
+
+        <div class="modal-body">
+          <div
+            v-for="(name, i) in allNames"
+            :key="i"
+            class="name-item border-bottom py-2"
+          >
+            • {{ name }}
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeNamesModal()">
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -418,10 +461,11 @@ const transferLoading = ref(false);
 // ===== Download data =====
 const load = async () => {
   loading.value = true;
+
   try {
     const res = await getMarginNotes({
-      pageNumber: 1,
-      pageSize: 50,
+      pageNumber: page.value,
+      pageSize: pageSize,
       incomingId: incomingId.value || null,
       injuredName: filters.injuredName || null,
       managerNote: filters.managerNote || null,
@@ -429,13 +473,16 @@ const load = async () => {
       createdAtTo: filters.createdAtTo || null,
     });
 
-    list.value = res.data.data;
-
+    list.value = res.data.data.map((item) => ({
+      ...item,
+      injuredNames: item.injuredName
+        ? item.injuredName.split(",").map((n) => n.trim())
+        : [],
+    }));
   } finally {
     loading.value = false;
   }
 };
-
 
 // ===== Download departments =====
 const loadDepartments = async () => {
@@ -487,11 +534,6 @@ const openEdit = (row) => {
 const save = async () => {
   if (!incomingId) {
     errorAlert("لا يمكن الإضافة —بيانات الوارد غير موجودة");
-    return;
-  }
-
-  if (!form.departmentIds || form.departmentIds.length === 0) {
-    errorAlert("اختر وحدة واحدة على الأقل");
     return;
   }
 
@@ -588,7 +630,7 @@ const filters = reactive({
   injuredName: "",
   managerNote: "",
   createdAtFrom: "",
-  createdAtTo: ""
+  createdAtTo: "",
 });
 
 const resetFilters = () => {
@@ -599,18 +641,31 @@ const resetFilters = () => {
   load();
 };
 
-
-
 const closeTransfer = () => transferModal.hide();
 
 const formatDate = (d) => {
   if (!d) return "-";
   const dt = new Date(d);
   if (isNaN(dt.getTime())) return "-";
-  return new Intl.DateTimeFormat("en", {
-    // dateStyle: "medium",
-    // timeStyle: "short",
-  }).format(dt);
+  const year = dt.getFullYear();
+  const month = String(dt.getMonth() + 1).padStart(2, "0");
+  const day = String(dt.getDate()).padStart(2, "0");
+  return `${year}/${month}/${day}`;
+};
+
+
+//  Modal عرض جميع أسماء الجرحى
+const allNames = ref([]);
+const namesModalEl = ref(null);
+let namesModal = null;
+
+const openNamesModal = (names) => {
+  allNames.value = names;
+  namesModal.show();
+};
+
+const closeNamesModal = () => {
+  namesModal.hide();
 };
 
 // ===== INIT =====
@@ -618,6 +673,7 @@ onMounted(() => {
   modal = new Modal(modalEl.value);
   transferModal = new Modal(transferModalEl.value);
   advancedModal = new Modal(advancedModalEl.value);
+  namesModal = new Modal(namesModalEl.value);
   load();
   loadDepartments();
 });

@@ -4,7 +4,7 @@ import axios from "./services";
 //  GET LIST: Landa (الإدارة والبيانات)
 // ===============================
 export const getLanda = (params) => {
-  return axios.get("/MarginNotes", { params });
+  return axios.get("/Landa", { params });
 };
 
 export const getLandaViwe = (params) => { return axios.get("/Landa", { params }); };
@@ -46,4 +46,9 @@ export const transferLanda = (formData) => {
 
 export const getLandaTransfers = (params) => {
   return axios.get("/Landa/transfers", { params });
+};
+
+
+export const changeLandaStatus = (data) => {
+  return axios.post("/Landa/change-status", data);
 };

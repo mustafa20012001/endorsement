@@ -16,29 +16,13 @@ export const routes = [
     ],
   },
 
-  // الصفحة الرئيسية
-  // {
-  //   path: `${baseUrl}/home`,
-  //   component: () => import("@/layouts/Default.vue"),
-  //   children: [
-  //     { path: "", name: "الرئيسية", component: () => import("@/views/Home.vue") }
-  //   ],
-  // },
-
-  // {
-  //   path: `${baseUrl}/about`,
-  //   component: () => import("@/layouts/Page.vue"),
-  //   children: [
-  //     { path: "", name: "لوحة ", component: () => import("@/views/About.vue") },
-  //   ],
-  // },
-  // {
-  //   path: `${baseUrl}/contacts`,
-  //   component: () => import("@/layouts/Page.vue"),
-  //   children: [
-  //     { path: "", name: "التواصل", component: () => import("@/views/Contacts.vue") },
-  //   ],
-  // },
+  {
+    path: `${baseUrl}/about`,
+    component: () => import("@/layouts/Page.vue"),
+    children: [
+      { path: "", name: "لوحة ", component: () => import("@/views/About.vue") },
+    ],
+  },
 
   {
     path: `${baseUrl}/incoming`,
@@ -46,12 +30,12 @@ export const routes = [
     children: [
       {
         path: "",
-        name: "وحدة البيانات",
-        component: () => import("@/views/Incoming.vue"),
+        name: "الوارد",
+        component: () => import("@/views/IncomingWrapper/IncomingWrapper.vue"),
       },
     ],
   },
- 
+
   {
     path: `${baseUrl}/margin-note`,
     component: () => import("@/layouts/Page.vue"),
@@ -59,7 +43,7 @@ export const routes = [
       {
         path: "",
         name: "الهامش الإداري",
-        component: () => import("@/views/MarginNote.vue"),
+        component: () => import("@/views/Margin/MarginTabs.vue"),
       },
     ],
   },
@@ -70,8 +54,9 @@ export const routes = [
     children: [
       {
         path: "",
-        name: "الإدارة والمعلومات",
-        component: () => import("@/views/DataManagement.vue"),
+        name: "الإدارة ",
+        component: () =>
+          import("@/views/DataManagementModule/DataManagementWrapper.vue"),
       },
     ],
   },
@@ -82,8 +67,8 @@ export const routes = [
     children: [
       {
         path: "",
-        name: "التدقيق",
-        component: () => import("@/views/FlowWrapper.vue"),
+        name: " البيانات والتدقيق",
+        component: () => import("@/views/FlowWrapper/FlowWrapper.vue"),
       },
     ],
   },
@@ -94,14 +79,11 @@ export const routes = [
       {
         path: "",
         name: "الاسترجاع",
-        component: () => import("@/views/ReturnWrapper.vue"),
+        component: () => import("@/views/ReturnWrapper/ReturnWrapper.vue"),
       },
     ],
   },
-  
-  
-  
-  
+
   {
     path: `${baseUrl}/injury-supports`,
     component: () => import("@/layouts/Page.vue"),
@@ -124,7 +106,7 @@ export const routes = [
       },
     ],
   },
-  
+
   // {
   //   path: `${baseUrl}/return-transactions`,
   //   component: () => import("@/layouts/Page.vue"),
