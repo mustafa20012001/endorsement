@@ -25,11 +25,11 @@
         />
 
         <button class="login-button" type="submit" :disabled="loading">
+          <span>{{ loading ? "جاري الدخول" : "دخول" }}</span>
           <span
             v-if="loading"
             class="spinner-border spinner-border-sm me-2"
           ></span>
-          <span>{{ loading ? "جاري الدخول..." : "دخول" }}</span>
         </button>
       </form>
 
@@ -54,52 +54,54 @@ const form = ref({
 const loading = ref(false);
 const errorMsg = ref("");
 
-// تسجيل الدخول
+//Log in
 const handleLogin = async () => {
   loading.value = true;
   errorMsg.value = "";
-
   try {
     const res = await login({
       userName: form.value.userName,
       password: form.value.password,
     });
-
-    // قراءة الاستجابة الصحيحة 
     const response = res.data;
-
-    if (!response.success || !response.data || !response.data.token) {
+    if (!response.success || !response.data?.token) {
       errorMsg.value = "اسم المستخدم أو كلمة المرور غير صحيحة";
-      loading.value = false;
       return;
     }
 
-    // استخراج البيانات من data.data
     const user = response.data;
 
-    // حفظ التوكن
+   // Save token and data
     localStorage.setItem("token", user.token);
-
-    // حفظ بيانات المستخدم
     localStorage.setItem("userData", JSON.stringify(user));
 
-    // تحويل حسب الدور
     const role = Number(user.role);
 
-    if (role === 0)
-      router.push(`${import.meta.env.VITE_BUILD_ADDRESS}/incoming`);
-    else if (role === 1)
-      router.push(`${import.meta.env.VITE_BUILD_ADDRESS}/incoming`);
-    else if (role === 2)
-      router.push(`${import.meta.env.VITE_BUILD_ADDRESS}/transaction-flow`);
-    else if (role === 3)
-      router.push(`${import.meta.env.VITE_BUILD_ADDRESS}/margin-note`);
-    else router.push(`${import.meta.env.VITE_BUILD_ADDRESS}/home`);
+   // Routing by role
+    switch (role) {
+  case 0:
+    router.push("/about");
+    break;
+  case 1:
+    router.push("/incoming");
+    break;
+  case 2:
+    router.push("/flow");
+    break;
+  case 3:
+    router.push("/division-flow");
+    break;
+  case 4:
+    router.push("/injury-supports");
+    break;
+  default:
+    router.push("/login");
+}
   } catch (err) {
-    errorMsg.value = "فشل الاتصال بالخادم، حاول مرة أخرى";
+    errorMsg.value = "فشل تسجيل الدخول";
+  } finally {
+    loading.value = false;
   }
-
-  loading.value = false;
 };
 </script>
 
@@ -113,7 +115,7 @@ const handleLogin = async () => {
   align-items: center;
   gap: 2rem;
 
-  background-image: url("@/assets/stacked-peaks-haikei.svg");
+  background-image: url("@/assets/image/stacked-peaks-haikei.svg");
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
@@ -213,6 +215,6 @@ const handleLogin = async () => {
 
 .spinner-border {
   color: white !important;
+  margin-left: 4px;
 }
-
 </style>

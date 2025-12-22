@@ -1,5 +1,4 @@
 <template>
-  <!-- App Bar -->
   <div
     class="appbar rounded-3 p-3 mb-3 d-flex justify-content-between align-items-center"
   >
@@ -50,12 +49,10 @@
                 <td>{{ formatDate(m.incomingDate) }}</td>
 
                 <td>
-                  <span v-if="m.status === 0" class="badge bg-secondary"
-                    >
+                  <span v-if="m.status === 0" class="badge bg-secondary">
                     <i class="bi bi-hourglass-split"></i> قيد الانتظار</span
                   >
-                  <span v-else-if="m.status === 1" class="badge bg-success"
-                    >
+                  <span v-else-if="m.status === 1" class="badge bg-success">
                     <i class="bi bi-check-circle-fill"></i> مقبول</span
                   >
                   <span v-else class="badge bg-danger">
@@ -68,10 +65,23 @@
 
                 <!-- الإجراءات -->
                 <td>
-                  <div class="d-flex justify-content-center gap-2">
+                  <!-- إذا الحالة انتظار -->
+                  <div
+                    v-if="m.status === 0"
+                    class="d-flex justify-content-center gap-2"
+                  >
                     <!-- قبول -->
-                    <button class="button-accept" @click="approve(m)">
-                      <svg class="svgIcon" viewBox="0 0 512 512">
+                    <button
+                      class="button-accept"
+                      @click="approve(m)"
+                      :disabled="approvingId === m.id || rejectingId === m.id"
+                    >
+                      <span
+                        v-if="approvingId === m.id"
+                        class="spinner-border spinner-border-sm text-light"
+                      ></span>
+
+                      <svg v-else class="svgIcon" viewBox="0 0 512 512">
                         <path
                           d="M173.9 439.4L7 272.5c-9.4-9.4-9.4-24.6 
                              0-33.9l22.6-22.6c9.4-9.4 24.6-9.4 
@@ -83,22 +93,34 @@
                     </button>
 
                     <!-- رفض -->
-                    <button class="button-reject" @click="openReject(m)">
-                      <svg class="svgIcon" viewBox="0 0 384 512">
+                    <button
+                      class="button-reject"
+                      @click="openReject(m)"
+                      :disabled="rejectingId === m.id || approvingId === m.id"
+                    >
+                      <span
+                        v-if="rejectingId === m.id"
+                        class="spinner-border spinner-border-sm text-light"
+                      ></span>
+
+                      <svg v-else class="svgIcon" viewBox="0 0 384 512">
                         <path
                           d="M231.6 256l142.8-142.8c12.5-12.5 12.5-32.7 
-                              0-45.2L352 46.1c-12.5-12.5-32.7-12.5-45.2 
-                              0L192 160.8 77.2 46.1C64.7 33.6 44.5 33.6 32 
-                              46.1L9.4 68.7c-12.5 12.5-12.5 32.7 
-                              0 45.2L152.2 256 9.4 398.8c-12.5 12.5-12.5 32.7 
-                              0 45.2L32 466.1c12.5 12.5 32.7 12.5 
-                              45.2 0L192 351.2l114.8 114.8c12.5 12.5 32.7 12.5 
-                              45.2 0l22.6-22.6c12.5-12.5 12.5-32.7 
-                              0-45.2L231.6 256z"
+                            0-45.2L352 46.1c-12.5-12.5-32.7-12.5-45.2 
+                            0L192 160.8 77.2 46.1C64.7 33.6 44.5 33.6 32 
+                            46.1L9.4 68.7c-12.5 12.5-12.5 32.7 
+                            0 45.2L152.2 256 9.4 398.8c-12.5 12.5-12.5 32.7 
+                            0 45.2L32 466.1c12.5 12.5 32.7 12.5 
+                            45.2 0L192 351.2l114.8 114.8c12.5 12.5 32.7 12.5 
+                            45.2 0l22.6-22.6c12.5-12.5 12.5-32.7 
+                            0-45.2L231.6 256z"
                         />
                       </svg>
                     </button>
                   </div>
+
+                  <!-- إذا ليست انتظار -->
+                  <span v-else class="text-muted">—</span>
                 </td>
               </tr>
               <tr v-if="list.length === 0">
@@ -132,11 +154,7 @@
         </div>
 
         <div class="modal-footer">
-          <button
-            type="button"
-            class="btn btn-light"
-            @click="closeReject"
-          >
+          <button type="button" class="btn btn-light" @click="closeReject">
             إلغاء
           </button>
           <button class="btn btn-confirmReject">رفض</button>
@@ -174,13 +192,25 @@ const load = async () => {
 // ===============================
 // STATUS CHANGE
 // ===============================
+
+const approvingId = ref(null);
+const rejectingId = ref(null);
+
 const approve = async (row) => {
-  await changeMarginNoteDivisionStatus({
-    incomingId: row.incomingId,
-    status: 1,
-    rejectionReason: null,
-  });
-  load();
+  if (approvingId.value || rejectingId.value) return;
+
+  approvingId.value = row.id;
+
+  try {
+    await changeMarginNoteDivisionStatus({
+      incomingId: row.incomingId,
+      status: 1,
+      rejectionReason: null,
+    });
+    load();
+  } finally {
+    approvingId.value = null;
+  }
 };
 
 // ===============================
@@ -195,6 +225,8 @@ const rejection = reactive({
 });
 
 const openReject = (row) => {
+  if (approvingId.value) return;
+  rejectingId.value = row.id;
   rejection.incomingId = row.incomingId;
   rejection.reason = "";
   rejectModal.show();
@@ -205,14 +237,17 @@ const closeReject = () => rejectModal.hide();
 const confirmReject = async () => {
   if (!rejection.reason.trim()) return;
 
-  await changeMarginNoteDivisionStatus({
-    incomingId: rejection.incomingId,
-    status: 2,
-    rejectionReason: rejection.reason,
-  });
-
-  rejectModal.hide();
-  load();
+  try {
+    await changeMarginNoteDivisionStatus({
+      incomingId: rejection.incomingId,
+      status: 2,
+      rejectionReason: rejection.reason,
+    });
+    rejectModal.hide();
+    load();
+  } finally {
+    rejectingId.value = null;
+  }
 };
 
 // ===============================

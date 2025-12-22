@@ -10,7 +10,7 @@
         <i class="bi bi-folder2-open"></i>
       </span>
       <div>
-        <h2 class="h5 fw-bold m-2">الإدارة والبيانات</h2>
+        <h2 class="h5 fw-bold m-2">الإدارة</h2>
         <small class="text-muted"
           >إدارة المذكرات – الأرقام والتواريخ والأصل</small
         >
@@ -21,12 +21,13 @@
   <!-- Search Bar -->
   <div class="card shadow-sm border-0 mb-3 p-3">
     <div class="row g-3">
-      <!-- اسم الجريح -->
+      <!-- رقم المذكرة -->
       <div class="col-md-6">
+        <!-- <label class="form-label">رقم المذكرة</label> -->
         <input
-          v-model="filters.injuredName"
+          v-model="filters.memoNumber"
           class="form-control"
-          placeholder="بحث بالاسم..."
+          placeholder="بحث عن رقم المذكرة"
           @keyup.enter="load"
         />
       </div>
@@ -43,7 +44,7 @@
   <!-- Table -->
   <div class="card shadow-sm border-0 mb-4">
     <div class="card-header custom-card-header">
-      <h5 class="mb-0 fw-bold primary">قائمة الإدارة والبيانات</h5>
+      <h5 class="mb-0 fw-bold primary">وارد شعبة الإدارة</h5>
     </div>
 
     <div class="card-body">
@@ -57,19 +58,15 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>رقم المذكرة</th>
-                <th>تاريخ المذكرة</th>
-
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
-
                 <!-- <th>تاريخ الإدخال</th> -->
-
                 <th>حالة المعاملة</th>
-
                 <th>تاريخ الاستلام</th>
                 <th>سبب الرفض</th>
                 <th>تاريخ الرفض</th>
+                <th>رقم المذكرة</th>
+                <th>تاريخ المذكرة</th>
 
                 <th>الإجراءات</th>
               </tr>
@@ -79,18 +76,11 @@
               <tr v-for="(m, i) in list" :key="m.id">
                 <!-- رقم تسلسلي -->
                 <td>{{ (page - 1) * pageSize + i + 1 }}</td>
-
-                <!-- memo -->
-                <td>{{ m.memoNumber }}</td>
-                <td>{{ formatDate(m.memoDate) }}</td>
-
                 <!-- incoming -->
                 <td>{{ m.incomingBookNumber ?? "-" }}</td>
                 <td>{{ formatDate(m.incomingDate) }}</td>
-
                 <!-- createdAt -->
                 <!-- <td>{{ formatDate(m.createdAt) }}</td> -->
-
                 <td>
                   <span v-if="m.status === 0" class="badge bg-secondary">
                     <i class="bi bi-hourglass-split"></i> قيد الانتظار
@@ -109,6 +99,10 @@
                 <td>{{ formatDate(m.receiveDate) }}</td>
                 <td>{{ m.rejectionReason ?? "-" }}</td>
                 <td>{{ formatDate(m.rejectionDate) }}</td>
+
+                <!-- memo -->
+                <td>{{ m.memoNumber }}</td>
+                <td>{{ formatDate(m.memoDate) }}</td>
                 <td>
                   <div class="d-flex justify-content-center gap-2">
                     <!-- زر إضافة هامش -->
@@ -123,7 +117,11 @@
                       </svg>
                     </button>
                     <!-- تعديل -->
-                    <button class="button-edit" @click="openEdit(m)">
+                    <button
+                      v-role="[0]"
+                      class="button-edit"
+                      @click="openEdit(m)"
+                    >
                       <svg class="svgIcon" viewBox="0 0 512 512">
                         <path
                           d="M290.74 93.24l-197.5 197.5c-2.5 2.5-4.1 
@@ -138,7 +136,7 @@
                     </button>
 
                     <!-- حذف -->
-                    <button class="button" @click="remove(m.id)">
+                    <button v-role="[0]" class="button" @click="remove(m.id)">
                       <svg class="svgIcon" viewBox="0 0 448 512">
                         <path
                           d="M135.2 17.7L128 32H32c-17.7 0-32 14.3-32 32s14.3 32 
@@ -180,21 +178,20 @@
                     </button>
 
                     <button
-  class="button-archive"
-  title="عرض المرفقات"
-  @click="openArchive(m)"
->
-  <svg class="svgIcon" viewBox="0 0 512 512">
-    <path
-      d="M424.4 214.7L253.1 386c-35.2 35.2-92.3 35.2-127.5 0
-      s-35.2-92.3 0-127.5L300.3 83.9c23.4-23.4 61.4-23.4
-      84.9 0s23.4 61.4 0 84.9L224.6 329.4c-11.7 11.7-30.7
-      11.7-42.4 0s-11.7-30.7 0-42.4L318.1 151c6.2-6.2
-      6.2-16.4 0-22.6s-16.4-6.2-22.6 0L159.6 264.3"
-    />
-  </svg>
-</button>
-
+                      class="button-archive"
+                      title="عرض المرفقات"
+                      @click="openArchive(m)"
+                    >
+                      <svg class="svgIcon" viewBox="0 0 512 512">
+                        <path
+                          d="M424.4 214.7L253.1 386c-35.2 35.2-92.3 35.2-127.5 0
+                             s-35.2-92.3 0-127.5L300.3 83.9c23.4-23.4 61.4-23.4
+                             84.9 0s23.4 61.4 0 84.9L224.6 329.4c-11.7 11.7-30.7
+                             11.7-42.4 0s-11.7-30.7 0-42.4L318.1 151c6.2-6.2
+                             6.2-16.4 0-22.6s-16.4-6.2-22.6 0L159.6 264.3"
+                        />
+                      </svg>
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -246,7 +243,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">
+          <h5 class="modal-title fw-bold primary">
             {{ editMode ? "تعديل بيانات " : "إضافة بيانات " }}
           </h5>
         </div>
@@ -273,7 +270,7 @@
                 />
               </div>
 
-              <div class="col-md-6">
+              <!-- <div class="col-md-6">
                 <label class="form-label">هل يوجد ملف أصل؟</label>
 
                 <div class="custom-vue-select-container">
@@ -289,7 +286,7 @@
                     placeholder="اختر..."
                   />
                 </div>
-              </div>
+              </div> -->
             </div>
           </div>
 
@@ -297,8 +294,20 @@
             <button type="button" class="btn btn-light" @click="close()">
               إلغاء
             </button>
-            <button type="submit" class="btn btn-add">
-              {{ editMode ? "حفظ التعديل" : "إضافة" }}
+            <button
+              type="submit"
+              class="btn btn-add"
+              :class="{ 'btn-saving': isSaving }"
+              :disabled="isSaving"
+            >
+              <span
+                v-if="isSaving"
+                class="spinner-border spinner-border-sm me-2"
+              ></span>
+
+              {{
+                isSaving ? "جارٍ الحفظ..." : editMode ? "حفظ التعديل" : "إضافة"
+              }}
             </button>
           </div>
         </form>
@@ -311,7 +320,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">تحويل إلى قسم آخر</h5>
+          <h5 class="modal-title fw-bold primary">تحويل إلى قسم آخر</h5>
         </div>
 
         <form @submit.prevent="transfer">
@@ -342,7 +351,7 @@
                 ></textarea>
               </div>
 
-              <div class="col-md-12">
+              <!-- <div class="col-md-12">
                 <label class="form-label">المرفقات</label>
                 <input
                   type="file"
@@ -350,7 +359,7 @@
                   class="form-control"
                   multiple
                 />
-              </div>
+              </div> -->
             </div>
           </div>
 
@@ -363,13 +372,19 @@
               إلغاء
             </button>
             <button
-    type="button"
-    class="btn btn-add"
-    @click="transfer"
-    :disabled="transferLoading"
-  >
-    تحويل
-  </button>
+              type="button"
+              class="btn btn-add"
+              :class="{ 'btn-saving': transferLoading }"
+              :disabled="transferLoading"
+              @click="transfer"
+            >
+              <span
+                v-if="transferLoading"
+                class="spinner-border spinner-border-sm me-2"
+              ></span>
+
+              {{ transferLoading ? "جارٍ التحويل..." : "تحويل" }}
+            </button>
           </div>
         </form>
       </div>
@@ -381,7 +396,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">عرض تفاصيل بيانات الهامش</h5>
+          <h5 class="modal-title fw-bold primary">عرض تفاصيل بيانات الهامش</h5>
         </div>
 
         <div class="modal-body">
@@ -453,53 +468,30 @@
         <!-- Body -->
         <div class="modal-body">
           <div class="row g-3">
-            <!-- الموضوع -->
             <div class="col-md-6">
-              <label class="form-label">الموضوع</label>
-              <input
-                v-model="filters.subject"
-                class="form-control"
-                placeholder="موضوع الوارد..."
-              />
-            </div>
-
-            <!-- التشكيل -->
-            <!-- <div class="col-md-6">
-            <label class="form-label">التشكيل</label>
-            <div class="custom-vue-select-container">
-              <VueSelect
-                v-model="filters.formationId"
-                :options="formations"
-                label="name"
-                :reduce="(f) => f.id"
-                searchable
-                placeholder="اختر التشكيل..."
-              />
-            </div>
-          </div> -->
-            <div class="col-md-6">
-              <label class="form-label">المصدر</label>
-              <input
-                v-model="filters.source"
-                class="form-control"
-                placeholder="أدخل مصدر الكتاب..."
-              />
+              <label class="form-label">اسم الجريح</label>
+              <input v-model="filters.injuredName" class="form-control" />
             </div>
 
             <div class="col-md-6">
-              <label class="form-label">من تاريخ الوارد</label>
+              <label class="form-label">رقم المذكرة</label>
+              <input v-model="filters.memoNumber" class="form-control" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">من تاريخ المذكرة</label>
               <input
-                v-model="filters.incomingDateFrom"
                 type="date"
+                v-model="filters.memoDateFrom"
                 class="form-control"
               />
             </div>
 
             <div class="col-md-6">
-              <label class="form-label">إلى تاريخ الوارد</label>
+              <label class="form-label">إلى تاريخ المذكرة</label>
               <input
-                v-model="filters.incomingDateTo"
                 type="date"
+                v-model="filters.memoDateTo"
                 class="form-control"
               />
             </div>
@@ -516,123 +508,107 @@
   </div>
 
   <!-- Archive Landa View Modal -->
-<div class="modal fade" ref="archiveModalEl" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
+  <div class="modal fade" ref="archiveModalEl" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold primary">
+            <i class="bi bi-folder2-open me-1"></i>
+            مرفقات الإدارة والبيانات
+          </h5>
+        </div>
 
-      <div class="modal-header">
-        <h5 class="modal-title">
-          <i class="bi bi-folder2-open me-1"></i>
-          مرفقات الإدارة والبيانات
-        </h5>
+        <div class="modal-body">
+          <div
+            v-if="archiveFiles.length === 0"
+            class="text-muted text-center py-4"
+          >
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+            لا توجد مرفقات
+          </div>
+
+          <div v-else class="list-group">
+            <button
+              v-for="(file, i) in archiveFiles"
+              :key="i"
+              class="list-group-item list-group-item-action d-flex align-items-center gap-2"
+              @click="openFile(file.fileFullUrl)"
+            >
+              <i class="bi bi-file-earmark-pdf text-danger fs-5"></i>
+              <span class="flex-grow-1">{{ file.fileName }}</span>
+              <i class="bi bi-box-arrow-up-right text-muted"></i>
+            </button>
+          </div>
+
+          <!-- زر إضافة مرفقات -->
+          <div class="mt-4">
+            <button
+              class="btn btn-outline-primary w-100"
+              @click="openArchiveUploadFromView"
+            >
+              <i class="bi bi-cloud-upload me-1"></i>
+              إضافة مرفقات
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeArchive">إغلاق</button>
+        </div>
       </div>
+    </div>
+  </div>
 
-      <div class="modal-body">
-
-        <div
-          v-if="archiveFiles.length === 0"
-          class="text-muted text-center py-4"
-        >
-          <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-          لا توجد مرفقات
-        </div>
-
-        <div v-else class="list-group">
-          <button
-            v-for="(file, i) in archiveFiles"
-            :key="i"
-            class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-            @click="openFile(file.fileFullUrl)"
-          >
-            <i class="bi bi-file-earmark-pdf text-danger fs-5"></i>
-            <span class="flex-grow-1">{{ file.fileName }}</span>
-            <i class="bi bi-box-arrow-up-right text-muted"></i>
-          </button>
-        </div>
-
-        <!-- زر إضافة مرفقات -->
-        <div class="mt-4">
-          <button
-            class="btn btn-outline-primary w-100"
-            @click="openArchiveUploadFromView"
-          >
+  <!-- Archive Upload Modal -->
+  <div class="modal fade" ref="archiveUploadModalEl" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold primary">
             <i class="bi bi-cloud-upload me-1"></i>
-            إضافة مرفقات
-          </button>
+            رفع مرفقات
+          </h5>
         </div>
 
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-light" @click="closeArchive">
-          إغلاق
-        </button>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-
-<!-- Archive Upload Modal -->
-<div class="modal fade" ref="archiveUploadModalEl" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-
-      <div class="modal-header">
-        <h5 class="modal-title">
-          <i class="bi bi-cloud-upload me-1"></i>
-          رفع مرفقات
-        </h5>
-      </div>
-
-      <div class="modal-body">
-
-        <div
-          v-for="(item, index) in archiveInputs"
-          :key="index"
-          class="d-flex gap-2 mb-2"
-        >
-          <input
-            type="file"
-            multiple
-            class="form-control"
-            @change="onArchiveFilesSelected($event, index)"
-          />
-
-          <button
-            v-if="archiveInputs.length > 1"
-            class="btn btn-outline-danger"
-            @click="removeArchiveInput(index)"
+        <div class="modal-body">
+          <div
+            v-for="(item, index) in archiveInputs"
+            :key="index"
+            class="d-flex gap-2 mb-2"
           >
-            <i class="bi bi-trash"></i>
+            <input
+              type="file"
+              multiple
+              class="form-control"
+              @change="onArchiveFilesSelected($event, index)"
+            />
+
+            <button
+              v-if="archiveInputs.length > 1"
+              class="btn btn-outline-danger"
+              @click="removeArchiveInput(index)"
+            >
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+
+          <button class="btn btn-search w-100 mt-3" @click="addArchiveInput">
+            <i class="bi bi-plus-lg me-1"></i>
+            إضافة مرفق آخر
           </button>
         </div>
 
-        <button
-          class="btn btn-outline-primary w-100 mt-3"
-          @click="addArchiveInput"
-        >
-          <i class="bi bi-plus-lg me-1"></i>
-          إضافة مرفق آخر
-        </button>
-
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeArchiveUpload">
+            إلغاء
+          </button>
+          <button class="btn btn-primary" @click="submitArchiveUpload">
+            رفع
+          </button>
+        </div>
       </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-light" @click="closeArchiveUpload">
-          إلغاء
-        </button>
-        <button class="btn btn-primary" @click="submitArchiveUpload">
-          رفع
-        </button>
-      </div>
-
     </div>
   </div>
-</div>
-
-
 </template>
 
 <script setup>
@@ -651,19 +627,14 @@ import {
 } from "@/services/Data-management.service.js";
 import { getDepartments } from "@/services/departments.service.js";
 import { successAlert, errorAlert, confirmDelete } from "@/utils/alert.js";
-import { uploadIncomingArchive, getIncomingArchive} from "@/services/incoming-archive.service.js";
+import {
+  uploadIncomingArchive,
+  getIncomingArchive,
+} from "@/services/incoming-archive.service.js";
 
 const route = useRoute();
 const list = ref([]);
 const loading = ref(false);
-
-// ===== الفلاتر =====
-// const filters = reactive({
-//   memoNumber: "",
-//   memoDateFrom: "",
-//   memoDateTo: "",
-//   hasOriginalFile: "",
-// });
 
 // ===== Pagination =====
 const page = ref(1);
@@ -709,7 +680,6 @@ const transferForm = reactive({
   files: [],
 });
 
-const transferLoading = ref(false);
 const load = async () => {
   loading.value = true;
 
@@ -719,42 +689,37 @@ const load = async () => {
     if (filters.hasOriginalFile === "true") hasOriginal = true;
     else if (filters.hasOriginalFile === "false") hasOriginal = false;
 
-    // جلب البيانات الأساسية (MarginNotes)
     const res = await getLanda({
       pageNumber: page.value,
       pageSize,
+
+      injuredName: filters.injuredName || null,
+      marginNoteId: filters.marginNoteId || null,
       memoNumber: filters.memoNumber || null,
       memoDateFrom: filters.memoDateFrom || null,
       memoDateTo: filters.memoDateTo || null,
       hasOriginalFile: hasOriginal,
-      injuredName: filters.injuredName || null,
-      incomingId: filters.incomingId || null,
-      managerNote: filters.managerNote || null,
       createdByUserId: filters.createdByUserId || null,
-      createdAtFrom: filters.createdAtFrom || null,
-      createdAtTo: filters.createdAtTo || null,
     });
 
-    list.value = res.data.data;
+    list.value = res.data.data || [];
     totalPages.value = res.data.pagination?.totalPages ?? 1;
 
     // ================================
-    //  دمج memoNumber + memoDate من API Landa
+    // دمج memoNumber + memoDate (اختياري)
     // ================================
-
     await Promise.all(
       list.value.map(async (row) => {
         if (!row.id) return;
 
         try {
           const landaRes = await getLandaViwe({
-            marginNoteId: row.id, // نفس ID
+            marginNoteId: row.id,
             pageNumber: 1,
             pageSize: 1,
           });
 
-          const landa = landaRes.data.data[0];
-
+          const landa = landaRes.data.data?.[0];
           if (landa) {
             row.memoNumber = landa.memoNumber;
             row.memoDate = landa.memoDate;
@@ -801,7 +766,13 @@ const openEdit = (row) => {
   modal.show();
 };
 
+const isSaving = ref(false);
+
 const save = async () => {
+  if (isSaving.value) return;
+
+  isSaving.value = true;
+
   const data = {
     marginNoteId: form.marginNoteId,
     memoNumber: form.memoNumber,
@@ -812,17 +783,19 @@ const save = async () => {
   try {
     if (!editMode.value) {
       await addLanda(data);
-      successAlert("تمت الإضافة بنجاح ");
+      successAlert("تمت الإضافة بنجاح");
     } else {
       await updateLanda(form.id, data);
-      successAlert("تم التحديث بنجاح ");
+      successAlert("تم التحديث بنجاح");
     }
 
     modal.hide();
     load();
   } catch (err) {
-    errorAlert("فشل الحفظ ");
+    errorAlert("فشل الحفظ");
     console.error(err);
+  } finally {
+    isSaving.value = false;
   }
 };
 
@@ -854,11 +827,10 @@ const handleFileUpload = (event) => {
 };
 
 // ===== تنفيذ التحويل =====
+
+const transferLoading = ref(false);
 const transfer = async () => {
-  if (!transferForm.landaId) {
-    errorAlert("لا يوجد معرف للتحويل");
-    return;
-  }
+  if (transferLoading.value) return;
 
   transferLoading.value = true;
 
@@ -868,18 +840,21 @@ const transfer = async () => {
     formData.append("DepartmentId", transferForm.departmentId);
     formData.append("Notes", transferForm.notes || "");
 
-    for (const file of transferForm.files) {
-      formData.append("files", file);
+    if (transferForm.files?.length) {
+      for (const file of transferForm.files) {
+        formData.append("files", file);
+      }
     }
 
     await transferLanda(formData);
 
-    successAlert(" تم التحويل بنجاح");
+    successAlert("تم التحويل بنجاح");
     transferModal.hide();
     load();
-  } catch (error) {
-    console.error(error);
-    errorAlert(" فشل التحويل");
+  } catch (e) {
+    const serverMessage = e?.response?.data?.message || "حدث خطأ أثناء التحويل";
+    transferModal.hide();
+    errorAlert(serverMessage);
   } finally {
     transferLoading.value = false;
   }
@@ -890,7 +865,6 @@ const changePage = (p) => {
   page.value = p;
   load();
 };
-
 
 const loadViewData = async (marginNoteId) => {
   const res = await getLandaViwe({
@@ -941,17 +915,12 @@ const viewItem = reactive({
 
 const filters = reactive({
   injuredName: "",
-  incomingId: "",
-  managerNote: "",
-  createdByUserId: "",
-  createdAtFrom: "",
-  createdAtTo: "",
+  marginNoteId: "",
   memoNumber: "",
   memoDateFrom: "",
   memoDateTo: "",
   hasOriginalFile: "",
-  pageNumber: 1,
-  pageSize: 10,
+  createdByUserId: "",
 });
 
 const advancedModal = ref(null);
@@ -1012,22 +981,14 @@ const archiveInputs = ref([{ files: [] }]);
 const currentIncomingId = ref("");
 
 /* فتح عرض المرفقات */
-const openArchive = async (row) => {
-  if (!row.incomingId) {
-    errorAlert("لا يوجد وارد مرتبط بهذه المعاملة");
-    return;
+const openArchive = (row) => {
+  if (!row.archiveIncoming || !row.archiveIncoming.items?.length) {
+    archiveFiles.value = [];
+  } else {
+    archiveFiles.value = row.archiveIncoming.items;
   }
 
-  try {
-    currentIncomingId.value = row.incomingId;
-
-    const res = await getIncomingArchive(row.incomingId);
-    archiveFiles.value = res.data.data || [];
-
-    archiveModal.show();
-  } catch (e) {
-    errorAlert("فشل جلب المرفقات");
-  }
+  archiveModal.show();
 };
 
 /* من العرض إلى الرفع */
@@ -1054,7 +1015,7 @@ const removeArchiveInput = (index) => {
 
 /* رفع المرفقات */
 const submitArchiveUpload = async () => {
-  const files = archiveInputs.value.flatMap(x => x.files);
+  const files = archiveInputs.value.flatMap((x) => x.files);
 
   if (!files.length) {
     return errorAlert("يرجى اختيار ملفات");
@@ -1076,7 +1037,6 @@ const submitArchiveUpload = async () => {
 const openFile = (url) => {
   window.open(url, "_blank");
 };
-
 
 onMounted(() => {
   modal = new Modal(modalEl.value);

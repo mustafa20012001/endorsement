@@ -1,5 +1,4 @@
 <template>
-  <!-- App Bar -->
   <div
     class="appbar rounded-3 p-3 mb-3 d-flex justify-content-between align-items-center"
   >
@@ -57,21 +56,26 @@
             <thead>
               <tr>
                 <th>#</th>
-                <!-- <th>اسم الجريح</th> -->
+                <th>أسماء الجرحى</th>
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
                 <!-- <th>رقم الكتاب</th> -->
                 <th>استلام المعاملة</th>
                 <th>تسليم المعاملة</th>
-                <th>استلام الطبيب العسكري</th>
                 <th>تسليم الطبيب العسكري</th>
-                <th>استلام التدقيق</th>
+                <th>استلام الطبيب العسكري</th>
                 <th>تاريخ إرسال التدقيق</th>
+                <th>استلام التدقيق</th>
                 <th>المواقف</th>
                 <th>الملاحظات</th>
                 <th>الحالة</th>
                 <th>سبب الرفض</th>
                 <th>تاريخ الرفض</th>
+                <th>حالة التدقيق</th>
+                <th>الحالة النهائية</th>
+                <th>إرجاع</th>
+                <th>سبب الإرجاع</th>
+                <th>تاريخ الإرجاع</th>
                 <th>أضيف بواسطة</th>
                 <th>تاريخ الإضافة</th>
                 <th>الإجراءات</th>
@@ -80,16 +84,36 @@
             <tbody>
               <tr v-for="(item, idx) in list" :key="item.id">
                 <td>{{ idx + 1 }}</td>
-                <!-- <td>{{ item.injuredName || "-" }}</td> -->
+                <!-- أسماء الجرحى -->
+
+                <td>
+                  <div>
+                    <div
+                      v-for="(name, i) in item.injuredNames.slice(0, 2)"
+                      :key="i"
+                    >
+                      • {{ name }}
+                    </div>
+
+                    <!-- زر عرض الكل -->
+                    <div
+                      v-if="item.injuredNames.length > 2"
+                      class="show-more"
+                      @click="openNamesModal(item.injuredNames)"
+                    >
+                      عرض الكل ({{ item.injuredNames.length }})
+                    </div>
+                  </div>
+                </td>
                 <td>{{ item.incomingBookNumber || "-" }}</td>
                 <td>{{ formatDate(item.incomingDate) }}</td>
                 <!-- <td>{{ item.incomingBookNumber || "-" }}</td> -->
                 <td>{{ formatDate(item.transactionReceiveDate) }}</td>
                 <td>{{ formatDate(item.transactionDeliveryDate) }}</td>
-                <td>{{ formatDate(item.militaryDoctorReceive) }}</td>
                 <td>{{ formatDate(item.militaryDoctorDelivery) }}</td>
-                <td>{{ formatDate(item.verificationReceive) }}</td>
+                <td>{{ formatDate(item.militaryDoctorReceive) }}</td>
                 <td>{{ formatDate(item.verificationSendDate) }}</td>
+                <td>{{ formatDate(item.verificationReceive) }}</td>
                 <td>
                   <button class="btn btn-search" @click="openSituations(item)">
                     عرض المواقف ({{ item.situations?.length || 0 }})
@@ -120,10 +144,58 @@
                 <td>{{ item.rejectionReason || "-" }}</td>
                 <!-- تاريخ الرفض -->
                 <td>{{ formatDate(item.rejectionDate) }}</td>
+                <td>
+                  <span
+                    class="badge"
+                    :class="{
+                      'bg-warning': item.verificationStatus === 0,
+                      'bg-primary': item.verificationStatus === 1,
+                      'bg-danger': item.verificationStatus === 2,
+                    }"
+                  >
+                    {{ verificationStatusText(item.verificationStatus) }}
+                  </span>
+                </td>
+
+                <td>
+                  <span
+                    class="badge"
+                    :class="{
+                      'bg-secondary': item.finalStatus === 0,
+                      'bg-success': item.finalStatus === 1,
+                      'bg-warning': item.finalStatus === 3,
+                      'bg-danger': item.finalStatus === 4,
+                    }"
+                  >
+                    {{ finalStatusText(item.finalStatus) }}
+                  </span>
+                </td>
+
+                <td>
+                  <span v-if="item.isReturn === 1" class="badge bg-warning"
+                    >معاد</span
+                  >
+                  <span v-else class="badge bg-success">غير معاد</span>
+                </td>
+                <td>{{ item.returnPercentage || "-" }}</td>
+                <td>{{ formatDate(item.returnDate) }}</td>
+
                 <td>{{ item.createdByUserName }}</td>
                 <td>{{ formatDate(item.createdAt) }}</td>
                 <td>
                   <div class="d-flex justify-content-center gap-2">
+                    <button class="button-add" @click="openAdd(item)">
+                      <svg class="svgIcon" viewBox="0 0 448 512">
+                        <path
+                          d="M432 256c0 17.7-14.3 32-32 32h-128v128c0 17.7-14.3 
+                             32-32 32s-32-14.3-32-32V288H80c-17.7 
+                             0-32-14.3-32-32s14.3-32 32-32h128V96c0-17.7 
+                             14.3-32 32-32s32 14.3 32 32v128h128c17.7 
+                             0 32 14.3 32 32z"
+                        />
+                      </svg>
+                    </button>
+
                     <!-- عرض -->
                     <button class="button-view" @click="openView(item)">
                       <svg class="svgIcon" viewBox="0 0 576 512">
@@ -141,20 +213,12 @@
                       </svg>
                     </button>
 
-                    <button class="button-add" @click="openAdd(item)">
-                      <svg class="svgIcon" viewBox="0 0 448 512">
-                        <path
-                          d="M432 256c0 17.7-14.3 32-32 32h-128v128c0 17.7-14.3 
-                             32-32 32s-32-14.3-32-32V288H80c-17.7 
-                             0-32-14.3-32-32s14.3-32 32-32h128V96c0-17.7 
-                             14.3-32 32-32s32 14.3 32 32v128h128c17.7 
-                             0 32 14.3 32 32z"
-                        />
-                      </svg>
-                    </button>
-
                     <!-- تعديل -->
-                    <button class="button-edit" @click="openEdit(item)">
+                    <button
+                      v-role="[0]"
+                      class="button-edit"
+                      @click="openEdit(item)"
+                    >
                       <svg class="svgIcon" viewBox="0 0 512 512">
                         <path
                           d="M290.74 93.24l-197.5 197.5c-2.5 2.5-4.1 
@@ -168,7 +232,11 @@
                       </svg>
                     </button>
                     <!-- حذف -->
-                    <button class="button" @click="remove(item.id)">
+                    <button
+                      v-role="[0]"
+                      class="button"
+                      @click="remove(item.id)"
+                    >
                       <svg class="svgIcon" viewBox="0 0 448 512">
                         <path
                           d="M135.2 17.7L128 32H32c-17.7 0-32 14.3-32 32s14.3 32 
@@ -238,55 +306,53 @@
     </button>
   </nav>
 
-  <!-- Add/Edit Modal -->
+  <!-- Add / Edit Modal -->
   <div class="modal fade" tabindex="-1" ref="modalEl">
     <div class="modal-dialog modal-dialog-centered modal-xl">
       <div class="modal-content">
+        <!-- Header -->
         <div class="modal-header">
-          <h5 class="modal-title">
+          <h5 class="modal-title fw-bold primary">
             {{ editMode ? "تعديل بيانات التدقيق" : "إضافة بيانات للتدقيق" }}
           </h5>
         </div>
 
-        <form @submit.prevent="save">
+        <!-- ===== LOADING OVERLAY ===== -->
+        <div v-if="loadingExisting" class="modal-loading">
+          <div class="spinner mt-5 mb-5"></div>
+        </div>
+
+        <!-- ===== FORM ===== -->
+        <form v-else @submit.prevent>
           <div class="modal-body">
-            <!-- بيانات الجريح -->
-            <div class="return-info-box mb-4">
-              <div class="row g-3">
-                <div class="col-md-6">
-                  <div class="info-row">
-                    <span class="info-icon"
-                      ><i class="bi bi-person-fill"></i
-                    ></span>
-                    <div class="info-text">
-                      <span class="label">رقم الوارد</span>
-                      <span class="value">{{
-                        form.incomingBookNumber || "-"
-                      }}</span>
-                    </div>
+            <!-- بيانات الوارد -->
+            <!-- <div class="return-info-box mb-4">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="info-row">
+                  <span class="info-icon"><i class="bi bi-person-fill"></i></span>
+                  <div class="info-text">
+                    <span class="label">رقم الوارد</span>
+                    <span class="value">{{ form.incomingBookNumber || "-" }}</span>
                   </div>
                 </div>
+              </div>
 
-                <div class="col-md-6">
-                  <div class="info-row">
-                    <span class="info-icon"
-                      ><i class="bi bi-journal-text"></i
-                    ></span>
-                    <div class="info-text">
-                      <span class="label">موضوع الوارد</span>
-                      <span class="value">{{
-                        form.incomingSubject || "-"
-                      }}</span>
-                    </div>
+              <div class="col-md-6">
+                <div class="info-row">
+                  <span class="info-icon"><i class="bi bi-journal-text"></i></span>
+                  <div class="info-text">
+                    <span class="label">موضوع الوارد</span>
+                    <span class="value">{{ form.incomingSubject || "-" }}</span>
                   </div>
                 </div>
               </div>
             </div>
+          </div> -->
 
-            <!-- ID المخفي -->
             <input type="hidden" v-model="form.incomingId" />
 
-            <!-- الحقول -->
+            <!-- ================= STEP 1 ================= -->
             <div class="row g-3">
               <div class="col-md-6">
                 <label class="form-label">تاريخ استلام المعاملة</label>
@@ -294,6 +360,7 @@
                   type="date"
                   v-model="form.transactionReceiveDate"
                   class="form-control"
+                  :disabled="!editMode && step !== 1"
                 />
               </div>
 
@@ -303,15 +370,18 @@
                   type="date"
                   v-model="form.transactionDeliveryDate"
                   class="form-control"
+                  :disabled="!editMode && step !== 1"
                 />
               </div>
 
+              <!-- ================= STEP 2 ================= -->
               <div class="col-md-6">
                 <label class="form-label">استلام الطبيب العسكري</label>
                 <input
                   type="date"
                   v-model="form.militaryDoctorReceive"
                   class="form-control"
+                  :disabled="!editMode && step !== 2"
                 />
               </div>
 
@@ -321,6 +391,17 @@
                   type="date"
                   v-model="form.militaryDoctorDelivery"
                   class="form-control"
+                  :disabled="!editMode && step !== 2"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">تاريخ تسليم التدقيق</label>
+                <input
+                  type="date"
+                  v-model="form.verificationSendDate"
+                  class="form-control"
+                  :disabled="!editMode && step !== 2"
                 />
               </div>
 
@@ -330,109 +411,143 @@
                   type="date"
                   v-model="form.verificationReceive"
                   class="form-control"
+                  :disabled="!editMode && step !== 2"
                 />
               </div>
 
-              <div class="col-md-6">
-                <label class="form-label">تاريخ تسليم التدقيق</label>
-                <input
-                  type="date"
-                  v-model="form.verificationDelivery"
-                  class="form-control"
-                />
-              </div>
+              <!-- ================= STEP 3 ================= -->
 
               <div class="col-md-6">
                 <label class="form-label">حالة التدقيق</label>
-
-                <div class="custom-vue-select-container">
-                  <VueSelect
-                    v-model="form.verificationStatus"
-                    :options="verificationStatusOptions"
-                    label="label"
-                    :reduce="(opt) => opt.value"
-                    placeholder="اختر حالة التدقيق"
-                    searchable
-                  />
-                </div>
+                <VueSelect
+                  v-model="form.verificationStatus"
+                  :options="verificationStatusOptions"
+                  label="label"
+                  :reduce="(o) => o.value"
+                  :disabled="!editMode && step !== 3"
+                />
               </div>
 
               <div class="col-md-6">
                 <label class="form-label">الحالة النهائية</label>
+                <VueSelect
+                  v-model="form.finalStatus"
+                  :options="finalStatusOptions"
+                  label="label"
+                  :reduce="(o) => o.value"
+                  :disabled="!editMode && step !== 3"
+                />
+              </div>
 
-                <div class="custom-vue-select-container">
-                  <VueSelect
-                    v-model="form.finalStatus"
-                    :options="finalStatusOptions"
-                    label="label"
-                    :reduce="(opt) => opt.value"
-                    placeholder="اختر الحالة النهائية"
-                    searchable
-                  />
-                </div>
+              <div class="col-md-6">
+                <label class="form-label">هل معاد؟</label>
+                <VueSelect
+                  v-model="form.isReturn"
+                  :options="isReturnOptions"
+                  label="label"
+                  :reduce="(o) => o.value"
+                  :disabled="!editMode && step !== 3"
+                />
+              </div>
+
+              <div class="col-md-6" v-if="form.isReturn === 1">
+                <label class="form-label">سبب الإرجاع</label>
+                <input
+                  v-model="form.returnPercentage"
+                  class="form-control"
+                  :disabled="!editMode && step !== 3"
+                />
+              </div>
+
+              <div class="col-md-6" v-if="form.isReturn === 1">
+                <label class="form-label">تاريخ الإرجاع</label>
+                <input
+                  type="date"
+                  v-model="form.returnDate"
+                  class="form-control"
+                  :disabled="!editMode && step !== 3"
+                />
               </div>
 
               <div class="col-md-12">
                 <label class="form-label">الملاحظات</label>
-                <textarea v-model="form.notes" class="form-control"></textarea>
+                <textarea
+                  v-model="form.notes"
+                  class="form-control"
+                  :disabled="!editMode && step !== 3"
+                ></textarea>
               </div>
             </div>
 
-            <!-- قسم المواقف -->
+            <!-- ================= المواقف ================= -->
             <div class="mt-4 situations-box">
               <h6 class="fw-bold mb-3">المواقف</h6>
 
               <div
-                class="row g-3 mb-3 situation-item"
+                class="row g-3 mb-3"
                 v-for="(s, i) in form.situations"
                 :key="i"
               >
                 <div class="col-md-3">
-                  <label class="small-label">رقم الموقف</label>
+                  <!-- <label class="form-label">رقم المواقف</label> -->
                   <input
                     v-model="s.situationNumber"
                     class="form-control"
+                    :disabled="!editMode && step !== 3"
                     placeholder="رقم الموقف"
                   />
                 </div>
 
                 <div class="col-md-8">
-                  <label class="small-label">اسم الموقف</label>
+                  <!-- <label class="form-label">عنوان المواقف</label> -->
                   <input
                     v-model="s.situationName"
                     class="form-control"
-                    placeholder="اسم الموقف"
+                    :disabled="!editMode && step !== 3"
+                    placeholder="عنوان الموقف"
                   />
                 </div>
 
-                <div class="col-md-1 d-flex align-items-end">
+                <div class="col-md-1">
                   <button
                     type="button"
-                    class="btn btn-danger btn-sm remove-btn"
+                    class="btn btn-danger"
                     @click="removeSituationRow(i)"
-                    :disabled="form.situations.length === 1"
+                    :disabled="!editMode && step !== 3"
                   >
-                    <i class="bi bi-x-lg"></i>
+                    ✕
                   </button>
                 </div>
               </div>
 
               <button
                 type="button"
-                class="btn btn-add btn-sm px-4"
+                class="btn btn-add btn-sm"
                 @click="addSituationRow"
+                :disabled="!editMode && step !== 3"
               >
-                <i class="bi bi-plus-lg"></i> إضافة موقف
+                + إضافة موقف
               </button>
             </div>
           </div>
 
+          <!-- ================= Footer ================= -->
           <div class="modal-footer">
-            <button type="button" class="btn btn-light" @click="close()">
+            <button type="button" class="btn btn-light" @click="close">
               إلغاء
             </button>
-            <button type="submit" class="btn btn-add">
-              {{ editMode ? "حفظ التعديل" : "إضافة" }}
+            <button
+              type="button"
+              class="btn btn-add d-flex align-items-center gap-2"
+              :disabled="isSending"
+              @click="saveStep"
+            >
+              <span v-if="!isSending">إرسال</span>
+
+              <span v-else class="d-flex align-items-center gap-2">
+                <span class="spinner-border spinner-border-sm"></span>
+                جارٍ الإرسال…
+              </span>
             </button>
           </div>
         </form>
@@ -445,27 +560,26 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">تحويل إلى قسم آخر</h5>
+          <h5 class="modal-title fw-bold primary">تحويل إلى قسم آخر</h5>
         </div>
 
         <form @submit.prevent="transfer">
           <div class="modal-body">
             <div class="row g-3">
               <div class="col-md-12">
-  <label class="form-label">القسم</label>
+                <label class="form-label">القسم</label>
 
-  <div class="custom-vue-select-container">
-    <VueSelect
-      v-model="transferForm.departmentId"
-      :options="departmentsSelect"
-      label="label"
-      :reduce="opt => opt.value"
-      placeholder="اختر القسم"
-      searchable
-    />
-  </div>
-</div>
-
+                <div class="custom-vue-select-container">
+                  <VueSelect
+                    v-model="transferForm.departmentId"
+                    :options="departmentsSelect"
+                    label="label"
+                    :reduce="(opt) => opt.value"
+                    placeholder="اختر القسم"
+                    searchable
+                  />
+                </div>
+              </div>
 
               <div class="col-md-12">
                 <label class="form-label">ملاحظات</label>
@@ -487,12 +601,18 @@
             >
               إلغاء
             </button>
-            <button class="btn btn-primary" :disabled="transferLoading">
+            <button
+              class="btn btn-primary"
+              :class="{ 'btn-saving': isTransferring }"
+              :disabled="isTransferring"
+              @click="transfer"
+            >
               <span
-                v-if="transferLoading"
-                class="spinner-border spinner-border-sm me-1"
+                v-if="isTransferring"
+                class="spinner-border spinner-border-sm me-2"
               ></span>
-              تحويل
+
+              {{ isTransferring ? "جارٍ التحويل..." : "تحويل" }}
             </button>
           </div>
         </form>
@@ -505,16 +625,16 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">تفاصيل معاملة التدقيق</h5>
+          <h5 class="modal-title fw-bold primary">تفاصيل معاملة التدقيق</h5>
         </div>
 
         <div class="modal-body" v-if="selected">
           <div class="row g-3">
             <div class="col-md-12">
-              <label class="form-label">موضوع الوارد</label>
+              <label class="form-label">أسماء الجرحى</label>
               <input
                 class="form-control"
-                :value="selected.incomingSubject"
+                :value="selected.injuredNames?.join('، ') || '—'"
                 disabled
               />
             </div>
@@ -568,7 +688,77 @@
               <label class="form-label">تسليم التدقيق</label>
               <input
                 class="form-control"
-                :value="formatDate(selected.verificationDelivery)"
+                :value="formatDate(selected.verificationSendDate)"
+                disabled
+              />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">حالة الإرجاع</label>
+              <input
+                class="form-control"
+                :value="selected.isReturn === 1 ? 'نعم' : 'لا'"
+                disabled
+              />
+            </div>
+
+            <div class="col-md-6" v-if="selected.isReturn === 1">
+              <label class="form-label">نسبة الإرجاع</label>
+              <input
+                class="form-control"
+                :value="selected.returnPercentage"
+                disabled
+              />
+            </div>
+
+            <div class="col-md-6" v-if="selected.isReturn === 1">
+              <label class="form-label">تاريخ الإرجاع</label>
+              <input
+                class="form-control"
+                :value="formatDate(selected.returnDate)"
+                disabled
+              />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">حالة التدقيق</label>
+              <input
+                class="form-control"
+                :value="verificationStatusText(selected.verificationStatus)"
+                disabled
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">حالة التدقيق تاريخ</label>
+              <input
+                class="form-control"
+                :value="formatDate(selected.statusAuditHistory)"
+                disabled
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">الحالة النهائية</label>
+              <input
+                class="form-control"
+                :value="finalStatusText(selected.finalStatus)"
+                disabled
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">تاريخ الحالة النهائية</label>
+              <input
+                class="form-control"
+                :value="formatDate(selected.finalStatusDate)"
+                disabled
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">سجل التدقيق</label>
+              <input
+                class="form-control"
+                :value="formatDate(selected.statusAuditHistory)"
                 disabled
               />
             </div>
@@ -647,14 +837,14 @@
 
         <div class="modal-body">
           <div class="row g-3">
-            <div class="col-md-6">
+            <!-- <div class="col-md-6">
               <label class="form-label">موضوع الوارد</label>
               <input
                 v-model="filters.incomingId"
                 class="form-control"
                 placeholder="بحث بواسطة موضوع"
               />
-            </div>
+            </div> -->
 
             <div class="col-md-6">
               <label class="form-label">من تاريخ استلام المعاملة</label>
@@ -686,7 +876,7 @@
           </div>
         </div>
 
-        <div class="modal-footer d-flex justify-content-between">
+        <div class="modal-footer">
           <button class="btn btn-light" @click="closeAdvanced()">إغلاق</button>
           <button class="btn btn-add" @click="applyAdvanced()">تطبيق</button>
         </div>
@@ -699,7 +889,7 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content p-3">
         <div class="modal-header">
-          <h5 class="modal-title">المواقف المسجلة</h5>
+          <h5 class="modal-title fw-bold primary">المواقف المسجلة</h5>
         </div>
 
         <div class="modal-body">
@@ -731,6 +921,33 @@
       </div>
     </div>
   </div>
+
+  <!-- Names Modal (عرض كل الأسماء) -->
+  <div class="modal fade" tabindex="-1" ref="namesModal">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">أسماء الجرحى</h5>
+        </div>
+
+        <div class="modal-body">
+          <div
+            v-for="(name, i) in allNames"
+            :key="i"
+            class="name-item border-bottom py-2"
+          >
+            • {{ name }}
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeNamesModal()">
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -753,8 +970,6 @@ import { successAlert, errorAlert, confirmDelete } from "@/utils/alert.js";
 
 const route = useRoute();
 const incomingIdFromRoute = route.query.incomingId || null;
-
-// ===== بيانات الجدول =====
 const list = ref([]);
 const loading = ref(false);
 
@@ -768,31 +983,43 @@ const filters = reactive({
   pageNumber: 1,
   pageSize: 10,
 });
-/* ---------------- ENUMS ---------------- */
 
+/* ---------------- ENUMS ---------------- */
 /* FinalStatusType enum */
 const FinalStatusType = {
-  Completed: 0,
-  Apology: 1,
-  NotCompleted: 2,
+  Defult: 0,
+  Completed: 1,
+  Apology: 3,
+  NotCompleted: 4,
 };
 
-/* VerificationStatus enum */
 const VerificationStatus = {
-  Verified: 0,
-  NotVerified: 1,
+  Defult: 0,
+  Verified: 1,
+  NotVerified: 2,
 };
 
-/* Select */
 const finalStatusOptions = [
+  { value: FinalStatusType.Defult, label: "بدون" },
   { value: FinalStatusType.Completed, label: "منجز" },
   { value: FinalStatusType.Apology, label: "اعتذار" },
   { value: FinalStatusType.NotCompleted, label: "غير منجز" },
 ];
 
 const verificationStatusOptions = [
+  { value: VerificationStatus.Defult, label: "بدون" },
   { value: VerificationStatus.Verified, label: "مدقق" },
   { value: VerificationStatus.NotVerified, label: "غير مدقق" },
+];
+
+const IsReturnEnum = {
+  False: 0,
+  True: 1,
+};
+
+const isReturnOptions = [
+  { value: IsReturnEnum.False, label: "لا" },
+  { value: IsReturnEnum.True, label: "نعم" },
 ];
 
 // ===== Pagination =====
@@ -833,16 +1060,22 @@ const form = reactive({
   militaryDoctorReceive: "",
   militaryDoctorDelivery: "",
   verificationReceive: "",
-  verificationDelivery: "",
+  verificationSendDate: "",
   notes: "",
   finalStatus: 0,
   verificationStatus: 0,
+  isReturn: 0,
+  returnPercentage: "",
+  returnDate: "",
   situations: [
     {
       situationNumber: "1",
       situationName: "",
     },
   ],
+  statusAuditHistory: null,
+  finalStatusDate: "",
+  injuredNames: [],
 });
 
 const transferForm = reactive({
@@ -898,38 +1131,45 @@ const loadDepartments = async () => {
     const res = await getDepartments({ pageNumber: 1, pageSize: 100 });
     departments.value = res.data.data ?? [];
 
-    departmentsSelect.value = departments.value.map(d => ({
+    departmentsSelect.value = departments.value.map((d) => ({
       label: d.name,
-      value: d.id
+      value: d.id,
     }));
   } catch (error) {
     console.error("Error loading departments:", error);
   }
 };
 
-
 const openAdd = (row) => {
   editMode.value = false;
 
   Object.assign(form, {
     id: "",
-    incomingId: row?.incomingId || incomingIdFromRoute || null,
-    incomingBookNumber: row?.incomingBookNumber || "",
-    incomingSubject: row?.incomingSubject || "",
+    incomingId: row.incomingId,
+    incomingBookNumber: row.incomingBookNumber || "",
+    incomingSubject: row.incomingSubject || "",
 
     transactionReceiveDate: "",
     transactionDeliveryDate: "",
     militaryDoctorReceive: "",
     militaryDoctorDelivery: "",
     verificationReceive: "",
-    verificationDelivery: "",
+    verificationSendDate: "",
+
     verificationStatus: 0,
     finalStatus: 0,
+    isReturn: 0,
+    returnPercentage: "",
+    returnDate: "",
+
     notes: "",
     situations: [{ situationNumber: "1", situationName: "" }],
   });
 
+  step.value = 1;
   modal.show();
+  // Download the previous record discreetly (if available).
+  loadExistingAuditing(row);
 };
 
 const openEdit = (row) => {
@@ -943,33 +1183,48 @@ const openEdit = (row) => {
     incomingSubject: row.incomingSubject || "",
 
     transactionReceiveDate: row.transactionReceiveDate
-      ? row.transactionReceiveDate.slice(0, 16)
+      ? row.transactionReceiveDate.slice(0, 10)
       : "",
+
     transactionDeliveryDate: row.transactionDeliveryDate
-      ? row.transactionDeliveryDate.slice(0, 16)
+      ? row.transactionDeliveryDate.slice(0, 10)
       : "",
+
     militaryDoctorReceive: row.militaryDoctorReceive
-      ? row.militaryDoctorReceive.slice(0, 16)
+      ? row.militaryDoctorReceive.slice(0, 10)
       : "",
+
     militaryDoctorDelivery: row.militaryDoctorDelivery
-      ? row.militaryDoctorDelivery.slice(0, 16)
+      ? row.militaryDoctorDelivery.slice(0, 10)
       : "",
+
     verificationReceive: row.verificationReceive
-      ? row.verificationReceive.slice(0, 16)
+      ? row.verificationReceive.slice(0, 10)
       : "",
-    verificationDelivery: row.verificationDelivery
-      ? row.verificationDelivery.slice(0, 16)
+
+    verificationSendDate: row.verificationSendDate
+      ? row.verificationSendDate.slice(0, 10)
       : "",
+
     verificationStatus: row.verificationStatus ?? 0,
     finalStatus: row.finalStatus ?? 0,
 
+    isReturn: row.isReturn ?? 0,
+    returnPercentage: row.returnPercentage || "",
+    returnDate: row.returnDate?.slice(0, 10) || "",
+    statusAuditHistory: row.statusAuditHistory,
+    finalStatusDate: row.finalStatusDate
+      ? row.finalStatusDate.slice(0, 10)
+      : "",
+
+    injuredNames: row.injuredNames || [],
     notes: row.notes || "",
     situations: row.situations?.map((s, i) => ({
       situationNumber: s.situationNumber || String(i + 1),
       situationName: s.situationName || "",
     })) || [{ situationNumber: "1", situationName: "" }],
   });
-
+  step.value = detectStep(row);
   modal.show();
 };
 
@@ -985,6 +1240,12 @@ const removeSituationRow = (index) => {
   form.situations.splice(index, 1);
 };
 
+const verificationStatusText = (v) =>
+  verificationStatusOptions.find((x) => x.value === v)?.label ?? "-";
+
+const finalStatusText = (v) =>
+  finalStatusOptions.find((x) => x.value === v)?.label ?? "-";
+
 const save = async () => {
   const data = {
     incomingId: form.incomingId,
@@ -993,9 +1254,12 @@ const save = async () => {
     militaryDoctorReceive: form.militaryDoctorReceive || null,
     militaryDoctorDelivery: form.militaryDoctorDelivery || null,
     verificationReceive: form.verificationReceive || null,
-    verificationDelivery: form.verificationDelivery || null,
+    verificationSendDate: form.verificationSendDate || null,
     notes: form.notes || null,
     verificationStatus: form.verificationStatus,
+    isReturn: form.isReturn,
+    returnPercentage: form.isReturn === 1 ? form.returnPercentage : null,
+    returnDate: form.isReturn === 1 ? form.returnDate : null,
     finalStatus: form.finalStatus,
     situations: form.situations
       .filter((s) => s.situationName || s.situationNumber)
@@ -1044,8 +1308,11 @@ const openTransfer = (row) => {
   transferModal.show();
 };
 
+const isTransferring = ref(false);
 const transfer = async () => {
+  if (transferLoading.value) return;
   transferLoading.value = true;
+
   try {
     const body = {
       auditingAndDataId: transferForm.auditingAndDataId,
@@ -1054,12 +1321,17 @@ const transfer = async () => {
     };
 
     await transferAuditingAndData(body);
-    transferModal.hide();
+
     successAlert("تم تحويل المعاملة بنجاح");
+    transferModal.hide();
     load();
   } catch (error) {
     console.error("Error transferring AuditingAndData:", error);
-    errorAlert("حدث خطأ أثناء التحويل");
+
+    const serverMessage =
+      error?.response?.data?.message || "حدث خطأ أثناء التحويل";
+
+    errorAlert(serverMessage);
   } finally {
     transferLoading.value = false;
   }
@@ -1067,7 +1339,7 @@ const transfer = async () => {
 
 const closeTransfer = () => transferModal.hide();
 
-// ===== View (قراءة فقط) =====
+// ===== View =====
 const openView = (row) => {
   selected.value = row;
   viewModal.show();
@@ -1127,12 +1399,181 @@ const closeSituations = () => {
   situationsModal.hide();
 };
 
+const step = computed(() => {
+  // STEP 1
+  if (!form.transactionDeliveryDate) {
+    return 1;
+  }
+  // STEP 2
+  if (
+    !form.militaryDoctorReceive ||
+    !form.militaryDoctorDelivery ||
+    !form.verificationReceive ||
+    !form.verificationSendDate
+  ) {
+    return 2;
+  }
+  // STEP 3
+  return 3;
+});
+
+const stepRequiredFields = {
+  1: ["transactionDeliveryDate"],
+  2: [
+    "militaryDoctorReceive",
+    "militaryDoctorDelivery",
+    "verificationReceive",
+    "verificationSendDate",
+  ],
+
+  3: ["verificationStatus", "finalStatus"],
+};
+
+const isStepComplete = (stepNumber) => {
+  const fields = stepRequiredFields[stepNumber] || [];
+
+  return fields.every((field) => {
+    const value = form[field];
+    if (value === null || value === undefined) return false;
+    if (typeof value === "string" && value.trim() === "") return false;
+    return true;
+  });
+};
+
+const buildPayload = () => ({
+  incomingId: form.incomingId,
+  // STEP 1
+  transactionReceiveDate: form.transactionReceiveDate || null,
+  transactionDeliveryDate: form.transactionDeliveryDate || null,
+  // STEP 2
+  militaryDoctorReceive: form.militaryDoctorReceive || null,
+  militaryDoctorDelivery: form.militaryDoctorDelivery || null,
+  verificationReceive: form.verificationReceive || null,
+  verificationSendDate: form.verificationSendDate || null,
+  // STEP 3
+  verificationStatus: form.verificationStatus,
+  finalStatus: form.finalStatus,
+  isReturn: form.isReturn,
+  returnPercentage: form.isReturn === 1 ? form.returnPercentage : null,
+  returnDate: form.isReturn === 1 ? form.returnDate : null,
+  notes: form.notes || null,
+  situations: form.situations
+    .filter((s) => s.situationName || s.situationNumber)
+    .map((s) => ({
+      situationNumber: s.situationNumber,
+      situationName: s.situationName,
+    })),
+});
+
+const isSending = ref(false);
+
+const saveStep = async () => {
+  if (isSending.value) return;
+
+  isSending.value = true;
+
+  const payload = buildPayload();
+
+  try {
+    if (!form.id) {
+      const res = await addAuditingAndData(payload);
+      form.id = res.data.id;
+    } else {
+      await updateAuditingAndData(form.id, payload);
+    }
+
+    if (step.value === 1) {
+      modal.hide();
+      successAlert("تم إرسال بنجاح");
+      return;
+    }
+
+    if (step.value === 2) {
+      modal.hide();
+      successAlert("تم إرسال بنجاح");
+      return;
+    }
+
+    if (step.value === 3) {
+      modal.hide();
+      await load();
+      successAlert("تم إرسال بنجاح");
+    }
+  } catch (e) {
+    errorAlert("حدث خطأ أثناء الإرسال");
+  } finally {
+    isSending.value = false;
+  }
+};
+
+const loadingExisting = ref(false);
+const loadExistingAuditing = async (row) => {
+  if (!row?.id) return;
+  loadingExisting.value = true;
+  try {
+    const res = await getAuditingAndData({ incomingId: row.incomingId });
+    const existing = res.data.data?.[0];
+    if (!existing) return;
+
+    Object.assign(form, {
+      id: existing.id,
+
+      transactionReceiveDate:
+        existing.transactionReceiveDate?.slice(0, 10) || "",
+      transactionDeliveryDate:
+        existing.transactionDeliveryDate?.slice(0, 10) || "",
+
+      militaryDoctorReceive: existing.militaryDoctorReceive?.slice(0, 10) || "",
+      militaryDoctorDelivery:
+        existing.militaryDoctorDelivery?.slice(0, 10) || "",
+
+      verificationReceive: existing.verificationReceive?.slice(0, 10) || "",
+      verificationSendDate: existing.verificationSendDate?.slice(0, 10) || "",
+
+      verificationStatus: existing.verificationStatus ?? 0,
+      finalStatus: existing.finalStatus ?? 0,
+
+      isReturn: existing.isReturn ?? 0,
+      returnPercentage: existing.returnPercentage || "",
+      returnDate: existing.returnDate?.slice(0, 10) || "",
+
+      notes: existing.notes || "",
+      situations: existing.situations?.length
+        ? existing.situations
+        : [{ situationNumber: "1", situationName: "" }],
+    });
+
+    step.value = detectStep(existing);
+  } catch (e) {
+    console.error("Failed loading existing auditing", e);
+  } finally {
+    loadingExisting.value = false;
+  }
+};
+
+// ==============================
+//  Modal عرض كل أسماء الجرحى
+// ==============================
+const allNames = ref([]);
+const namesModal = ref(null);
+let namesModalInstance = null;
+
+const openNamesModal = (names) => {
+  allNames.value = names;
+  namesModalInstance.show();
+};
+
+const closeNamesModal = () => {
+  namesModalInstance.hide();
+};
+
 // ===== INIT =====
 onMounted(() => {
   modal = new Modal(modalEl.value);
   transferModal = new Modal(transferModalEl.value);
   viewModal = new Modal(viewModalEl.value);
   situationsModal = new Modal(situationsModalEl.value);
+  namesModalInstance = new Modal(namesModal.value);
   load();
   loadDepartments();
 });

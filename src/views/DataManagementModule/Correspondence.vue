@@ -56,12 +56,12 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>القسم المحوَّل إليه</th>
+                <!-- <th>القسم المحوَّل إليه</th> -->
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
                 <!-- <th>موضوع الوارد</th> -->
                 <!-- <th>اسم الجريح</th> -->
-                <th>تاريخ التحويل</th>
+                <!-- <th>تاريخ التحويل</th> -->
                 <!-- <th>تاريخ التسليم</th> -->
                 <th>تاريخ الاستلام</th>
                 <th>حالة المعاملة</th>
@@ -74,7 +74,7 @@
             <tbody>
               <tr v-for="(m, i) in list" :key="m.id">
                 <td>{{ (page - 1) * pageSize + i + 1 }}</td>
-                <td>{{ m.departmentName }}</td>
+                <!-- <td>{{ m.departmentName }}</td> -->
                 <td>{{ m.incomingBookNumber }}</td>
                 <td>{{ formatDate(m.incomingDate) }}</td>
 
@@ -95,7 +95,7 @@
                   </div>
                 </div>
               </td> -->
-                <td>{{ formatDate(m.createdAt) }}</td>
+                <!-- <td>{{ formatDate(m.createdAt) }}</td> -->
                 <!-- <td>{{ formatDate(m.deliveryDate) }}</td> -->
                 <td>{{ formatDate(m.incomingReceiveDate) }}</td>
                 <td>
@@ -120,14 +120,27 @@
 
                 <!-- الإجراءات -->
                 <td>
-                  <div class="d-flex justify-content-center gap-2">
+                  <!-- إذا الحالة انتظار فقط -->
+                  <div
+                    v-if="m.status === 0"
+                    class="d-flex justify-content-center gap-2"
+                  >
                     <!-- قبول -->
                     <button
                       class="button-accept"
                       title="قبول المعاملة"
                       @click="approve(m)"
+                      :disabled="
+                        approvingId === m.incomingId ||
+                        rejectingId === m.incomingId
+                      "
                     >
-                      <svg class="svgIcon" viewBox="0 0 512 512">
+                      <span
+                        v-if="approvingId === m.incomingId"
+                        class="spinner-border spinner-border-sm text-light"
+                      ></span>
+
+                      <svg v-else class="svgIcon" viewBox="0 0 512 512">
                         <path
                           d="M173.9 439.4L7 272.5c-9.4-9.4-9.4-24.6 
                              0-33.9l22.6-22.6c9.4-9.4 24.6-9.4 
@@ -143,22 +156,32 @@
                       class="button-reject"
                       title="رفض المعاملة"
                       @click="openReject(m)"
+                      :disabled="
+                        rejectingId === m.incomingId ||
+                        approvingId === m.incomingId
+                      "
                     >
-                    <svg class="svgIcon" viewBox="0 0 384 512">
-                  <path
-                         d="M231.6 256l142.8-142.8c12.5-12.5 12.5-32.7 
-                              0-45.2L352 46.1c-12.5-12.5-32.7-12.5-45.2 
-                              0L192 160.8 77.2 46.1C64.7 33.6 44.5 33.6 32 
-                              46.1L9.4 68.7c-12.5 12.5-12.5 32.7 
-                              0 45.2L152.2 256 9.4 398.8c-12.5 12.5-12.5 32.7 
-                              0 45.2L32 466.1c12.5 12.5 32.7 12.5 
-                              45.2 0L192 351.2l114.8 114.8c12.5 12.5 32.7 12.5 
-                              45.2 0l22.6-22.6c12.5-12.5 12.5-32.7 
-                              0-45.2L231.6 256z"
-                       />
-                     </svg>
+                      <span
+                        v-if="rejectingId === m.incomingId"
+                        class="spinner-border spinner-border-sm text-light"
+                      ></span>
+
+                      <svg v-else class="svgIcon" viewBox="0 0 384 512">
+                        <path
+                          d="M231.6 256l142.8-142.8c12.5-12.5 12.5-32.7 
+                             0-45.2L352 46.1c-12.5-12.5-32.7-12.5-45.2 
+                             0L192 160.8 77.2 46.1C64.7 33.6 44.5 33.6 32 
+                             46.1L9.4 68.7c-12.5 12.5-12.5 32.7 
+                             0 45.2L152.2 256 9.4 398.8c-12.5 12.5-12.5-32.7 
+                             0 45.2L32 466.1c12.5 12.5 32.7 12.5 
+                             45.2 0L192 351.2l114.8 114.8c12.5 12.5 32.7 12.5 
+                             45.2 0l22.6-22.6c12.5-12.5 12.5-32.7 
+                             0-45.2L231.6 256z"
+                        />
+                      </svg>
                     </button>
                   </div>
+                  <span v-else class="text-muted">—</span>
                 </td>
               </tr>
 
@@ -340,6 +363,9 @@ const rejection = reactive({
 });
 
 const openReject = (row) => {
+  if (approvingId.value) return;
+
+  rejectingId.value = row.incomingId;
   rejection.id = row.incomingId;
   rejection.reason = "";
   rejectModal.show();
@@ -353,8 +379,22 @@ const confirmReject = async () => {
     return;
   }
 
-  await changeStatus(rejection.id, 2, rejection.reason);
-  rejectModal.hide();
+  try {
+    await changeLandaStatus({
+      incomingId: rejection.id,
+      status: 2,
+      rejectionReason: rejection.reason,
+    });
+
+    successAlert("تم رفض المعاملة");
+    rejectModal.hide();
+    load();
+  } catch (err) {
+    console.error(err);
+    errorAlert("فشل في رفض المعاملة");
+  } finally {
+    rejectingId.value = null;
+  }
 };
 
 const changeStatus = async (incomingId, status, reason = null) => {
@@ -373,8 +413,29 @@ const changeStatus = async (incomingId, status, reason = null) => {
   }
 };
 
-const approve = (row) => {
-  changeStatus(row.incomingId, 1);
+const approvingId = ref(null);
+const rejectingId = ref(null);
+
+const approve = async (row) => {
+  if (approvingId.value || rejectingId.value) return;
+
+  approvingId.value = row.incomingId;
+
+  try {
+    await changeLandaStatus({
+      incomingId: row.incomingId,
+      status: 1,
+      rejectionReason: null,
+    });
+
+    successAlert("تم قبول المعاملة");
+    load();
+  } catch (err) {
+    console.error(err);
+    errorAlert("فشل في قبول المعاملة");
+  } finally {
+    approvingId.value = null;
+  }
 };
 
 const formatDate = (d) => {

@@ -75,16 +75,30 @@
               <tr v-for="(inc, idx) in incomingList" :key="inc.id">
                 <td>{{ (page - 1) * pageSize + idx + 1 }}</td>
                 <td>
-                  <div v-for="(name, i) in inc.injuredNames" :key="i">
-                    • {{ name }}
+                  <div>
+                    <div
+                      v-for="(name, i) in inc.injuredNames.slice(0, 2)"
+                      :key="i"
+                    >
+                      • {{ name }}
+                    </div>
+
+                    <!-- زر عرض الكل -->
+                    <div
+                      v-if="inc.injuredNames.length > 2"
+                      class="show-more"
+                      @click="openNamesModal(inc.injuredNames)"
+                    >
+                      عرض الكل ({{ inc.injuredNames.length }})
+                    </div>
                   </div>
                 </td>
+
                 <td>{{ inc.formationName }}</td>
                 <td>{{ inc.incomingBookNumber }}</td>
                 <td>{{ formatDate(inc.incomingDate) }}</td>
-                <td>{{ inc.managerNote || "—" }}</td>  
-                <td>{{ inc.managerNoteDivision || "—" }}</td>  
-
+                <td>{{ inc.managerNote || "—" }}</td>
+                <td>{{ inc.managerNoteDivision || "—" }}</td>
                 <td>
                   <div class="d-flex justify-content-center gap-2">
                     <!-- تعديل -->
@@ -92,12 +106,12 @@
                       <svg viewBox="0 0 512 512" class="svgIcon">
                         <path
                           d="M362.7 19.3c25-25 65.5-25
-                            90.5 0l39.5 39.5c25 25 25
-                            65.5 0 90.5l-39.5 39.5L323.2
-                            58.8l39.5-39.5zm-68 68L58.8
-                            323.2 19.3 482.7c-2.9 12.1
-                            8.2 23.2 20.3 20.3l159.5-39.5L444.7
-                            217.3 294.7 87.3z"
+                          90.5 0l39.5 39.5c25 25 25
+                          65.5 0 90.5l-39.5 39.5L323.2
+                          58.8l39.5-39.5zm-68 68L58.8
+                          323.2 19.3 482.7c-2.9 12.1
+                          8.2 23.2 20.3 20.3l159.5-39.5L444.7
+                          217.3 294.7 87.3z"
                         />
                       </svg>
                     </button>
@@ -107,14 +121,14 @@
                       <svg viewBox="0 0 448 512" class="svgIcon">
                         <path
                           d="M135.2 17.7L128 32H32C14.3
-                             32 0 46.3 0 64s14.3 32 
-                             32 32h384c17.7 0 32-14.3 
-                             32-32s-14.3-32-32-32H320l-7.2-14.3C307.4
-                             6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2
-                             6.8-28.6 17.7zM416 
-                             128H32l21.2 339c1.6 25.3 
-                             22.6 45 47.9 45h246c25.3 
-                             0 46.3-19.7 47.9-45L416 128z"
+                           32 0 46.3 0 64s14.3 32 
+                           32 32h384c17.7 0 32-14.3 
+                           32-32s-14.3-32-32-32H320l-7.2-14.3C307.4
+                           6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2
+                           6.8-28.6 17.7zM416 
+                           128H32l21.2 339c1.6 25.3 
+                           22.6 45 47.9 45h246c25.3 
+                           0 46.3-19.7 47.9-45L416 128z"
                         />
                       </svg>
                     </button>
@@ -123,11 +137,11 @@
                       <svg class="svgIcon" viewBox="0 0 512 512">
                         <path
                           d="M492.7 273.4L400 366.1c-15 15-41 4.5-41-17V320H208c-22.1 
-                             0-40-17.9-40-40v-48c0-22.1 17.9-40 40-40h151V162c0-21.5 
-                             26-32 41-17l92.7 92.7c9.4 9.4 9.4 24.6 0 
-                             34.1zM20 238.6l92.7-92.7c15-15 41-4.5 41 17v42h151c22.1 
-                             0 40 17.9 40 40v48c0 22.1-17.9 40-40 40H153v29.1c0 21.5-26 
-                             32-41 17L20 273.4c-9.4-9.4-9.4-24.6 0-34.1z"
+                           0-40-17.9-40-40v-48c0-22.1 17.9-40 40-40h151V162c0-21.5 
+                           26-32 41-17l92.7 92.7c9.4 9.4 9.4 24.6 0 
+                           34.1zM20 238.6l92.7-92.7c15-15 41-4.5 41 17v42h151c22.1 
+                           0 40 17.9 40 40v48c0 22.1-17.9 40-40 40H153v29.1c0 21.5-26 
+                           32-41 17L20 273.4c-9.4-9.4-9.4-24.6 0-34.1z"
                         />
                       </svg>
                     </button>
@@ -136,17 +150,45 @@
                       <svg class="svgIcon" viewBox="0 0 576 512">
                         <path
                           d="M572.52 241.4C518.29 135.59 407.81 64 288 
-                              64S57.71 135.59 3.48 241.4a48.07 48.07 
-                              0 000 45.2C57.71 376.41 168.19 448 288 
-                              448s230.29-71.59 284.52-161.4a48.07 48.07 
-                              0 000-45.2zM288 400c-88.22 0-168.48-48.33-211.86-128C119.52 
-                              192.33 199.78 144 288 144s168.48 48.33 
-                              211.86 128C456.48 351.67 376.22 400 288 
-                              400zm0-208a80 80 0 1080 80 80.09 80.09 
-                              0 00-80-80z"
+                            64S57.71 135.59 3.48 241.4a48.07 48.07 
+                            0 000 45.2C57.71 376.41 168.19 448 288 
+                            448s230.29-71.59 284.52-161.4a48.07 48.07 
+                            0 000-45.2zM288 400c-88.22 0-168.48-48.33-211.86-128C119.52 
+                            192.33 199.78 144 288 144s168.48 48.33 
+                            211.86 128C456.48 351.67 376.22 400 288 
+                            400zm0-208a80 80 0 1080 80 80.09 80.09 
+                            0 00-80-80z"
                         />
                       </svg>
                     </button>
+                    <!-- عرض المرفقات -->
+                    <button
+                      class="button-archive"
+                      title="عرض المرفقات"
+                      @click="openArchive(inc)"
+                    >
+                      <svg class="svgIcon" viewBox="0 0 512 512">
+                        <path
+                          d="M424.4 214.7L253.1 386c-35.2 35.2-92.3 35.2-127.5 0
+                             s-35.2-92.3 0-127.5L300.3 83.9c23.4-23.4 61.4-23.4
+                             84.9 0s23.4 61.4 0 84.9L224.6 329.4c-11.7 11.7-30.7
+                             11.7-42.4 0s-11.7-30.7 0-42.4L318.1 151c6.2-6.2
+                             6.2-16.4 0-22.6s-16.4-6.2-22.6 0L159.6 264.3
+                             c-23.4 23.4-23.4 61.4 0 84.9s61.4 23.4 84.9 0
+                             l160.6-160.6c35.2-35.2 35.2-92.3 0-127.5
+                             s-92.3-35.2-127.5 0L106.3 232.4"
+                        />
+                      </svg>
+                    </button>
+
+                    <!-- إضافة مرفقات -->
+                    <!-- <button
+                         class="button-archive-add"
+                         title="إضافة مرفقات"
+                         @click="openArchiveUpload(inc)"
+                    >
+                      <i class="bi bi-cloud-upload"></i>
+                    </button> -->
                   </div>
                 </td>
               </tr>
@@ -197,7 +239,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">
+          <h5 class="modal-title fw-bold primary">
             {{ editMode ? "تعديل وارد" : "إضافة وارد" }}
           </h5>
         </div>
@@ -280,23 +322,23 @@
                 <input v-model="form.content" rows="3" class="form-control" />
               </div>
               <!-- <div class="col-6">
-                  <label class="form-label">هامش مدير القسم</label>
-                  <input v-model="form.content" rows="3" class="form-control" />
-                </div> -->
-              <div class="col-md-6">
+                    <label class="form-label">هامش مدير القسم</label>
+                    <input v-model="form.content" rows="3" class="form-control" />
+              </div> -->
+              <!-- <div class="col-md-6">
                 <label class="form-label">ارسال الى :</label>
-                <div class="custom-vue-select-container">
+              <div class="custom-vue-select-container">
                   <VueSelect
-                    v-model="form.departmentIds"
-                    :options="departments"
-                    label="name"
-                    :reduce="(d) => d.id"
-                    multiple
-                    searchable
-                    placeholder="اختر الوحدة..."
+                       v-model="form.departmentIds"
+                       :options="departments"
+                       label="name"
+                       :reduce="(d) => d.id"
+                       multiple
+                       searchable
+                       placeholder="اختر الوحدة..."
                   />
                 </div>
-              </div>
+              </div> -->
             </div>
           </div>
 
@@ -304,8 +346,20 @@
             <button type="button" class="btn btn-light" @click="close()">
               إلغاء
             </button>
-            <button type="submit" class="btn btn-add" @click.stop>
-              {{ editMode ? "حفظ التعديل" : "إضافة" }}
+            <button
+              type="submit"
+              class="btn btn-add"
+              :class="{ 'btn-saving': isSaving }"
+              :disabled="isSaving"
+            >
+              <span
+                v-if="isSaving"
+                class="spinner-border spinner-border-sm me-2"
+              ></span>
+
+              {{
+                isSaving ? "جارٍ الحفظ..." : editMode ? "حفظ التعديل" : "إضافة"
+              }}
             </button>
           </div>
         </form>
@@ -318,7 +372,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">بحث متقدم</h5>
+          <h5 class="modal-title fw-bold primary">بحث متقدم</h5>
         </div>
 
         <div class="modal-body">
@@ -373,7 +427,7 @@
         </div>
 
         <div class="modal-footer">
-          <button class="btn btn-light" @click="closeAdvanced()">إغلاق</button>
+          <button class="btn btn-light" @click="closeAdvanced()">إلغاء</button>
           <button class="btn btn-add" @click="applyAdvanced()">تطبيق</button>
         </div>
       </div>
@@ -385,7 +439,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">ترحيل المعاملة</h5>
+          <h5 class="modal-title fw-bold primary">ترحيل المعاملة</h5>
         </div>
 
         <div class="modal-body">
@@ -427,7 +481,19 @@
 
         <div class="modal-footer">
           <button class="btn btn-light" @click="closeTransfer()">إلغاء</button>
-          <button class="btn btn-add" @click="submitTransfer()">تحويل</button>
+          <button
+            class="btn btn-add"
+            :class="{ 'btn-saving': isTransferring }"
+            :disabled="isTransferring"
+            @click="submitTransfer"
+          >
+            <span
+              v-if="isTransferring"
+              class="spinner-border spinner-border-sm me-2"
+            ></span>
+
+            {{ isTransferring ? "جارٍ الترحيل..." : "تحويل" }}
+          </button>
         </div>
       </div>
     </div>
@@ -438,7 +504,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">عرض تفاصيل الوارد</h5>
+          <h5 class="modal-title fw-bold primary">عرض تفاصيل الوارد</h5>
         </div>
 
         <div class="modal-body">
@@ -521,6 +587,141 @@
       </div>
     </div>
   </div>
+
+  <!-- Names Modal (عرض كل الأسماء) -->
+  <div class="modal fade" tabindex="-1" ref="namesModal">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold primary">أسماء الجرحى</h5>
+        </div>
+
+        <div class="modal-body">
+          <div
+            v-for="(name, i) in allNames"
+            :key="i"
+            class="name-item border-bottom py-2"
+          >
+            • {{ name }}
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeNamesModal()">
+            إلغاء
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Archive Modal -->
+  <div class="modal fade" ref="archiveModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold primary">
+            <i class="bi bi-folder2-open me-1"></i>
+            مرفقات الوارد
+          </h5>
+        </div>
+
+        <div class="modal-body">
+          <!-- لا توجد مرفقات -->
+          <div
+            v-if="archiveFiles.length === 0"
+            class="text-muted text-center py-4"
+          >
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+            لا توجد مرفقات
+          </div>
+
+          <!-- قائمة المرفقات -->
+          <div v-else class="list-group">
+            <button
+              v-for="(file, i) in archiveFiles"
+              :key="i"
+              class="list-group-item list-group-item-action d-flex align-items-center gap-2"
+              @click="openFile(file.fileFullUrl)"
+            >
+              <i class="bi bi-file-earmark-pdf text-danger fs-5"></i>
+              <span class="flex-grow-1">
+                {{ file.fileName }}
+              </span>
+              <i class="bi bi-box-arrow-up-right text-muted"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeArchive()">إلغاء</button>
+          <button class="btn btn-primary" @click="openArchiveUploadFromView">
+            <i class="bi bi-cloud-upload me-1"></i>
+            إضافة مرفقات
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Archive Upload Modal -->
+  <div class="modal fade" ref="archiveUploadModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <!-- Header -->
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold primary">
+            <i class="bi bi-cloud-upload me-1"></i>
+            إضافة مرفقات
+          </h5>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body">
+          <div
+            v-for="(item, index) in archiveInputs"
+            :key="index"
+            class="d-flex gap-2 align-items-center mb-2"
+          >
+            <!-- Input -->
+            <input
+              type="file"
+              accept=".pdf,image/*"
+              multiple
+              class="form-control"
+              @change="onArchiveFilesSelected($event, index)"
+            />
+
+            <!-- حذف -->
+            <button
+              v-if="archiveInputs.length > 1"
+              class="btn btn-outline-danger"
+              @click="removeArchiveInput(index)"
+              title="حذف"
+            >
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+
+          <!-- إضافة حقل -->
+          <button class="btn btn-search w-100 mt-3" @click="addArchiveInput">
+            <i class="bi bi-plus-lg me-1"></i>
+            إضافة مرفق آخر
+          </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeArchiveUpload">
+            إلغاء
+          </button>
+          <button class="btn btn-primary" @click="submitArchiveUpload">
+            رفع
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -539,6 +740,7 @@ import {
   deleteIncoming,
   transferIncoming,
 } from "@/services/incoming.service.js";
+import { uploadIncomingArchive } from "@/services/incoming-archive.service.js";
 
 const router = useRouter();
 /* Pagination */
@@ -558,7 +760,6 @@ const visiblePages = computed(() => {
 const formations = ref([]);
 const incomingList = ref([]);
 const loading = ref(false);
-
 const page = ref(1);
 const totalPages = ref(1);
 const pageSize = 10;
@@ -596,6 +797,7 @@ const addTag = (newTag) => {
 
 const manualAddTag = async () => {
   console.log("ENTER PRESSED:", tempName.value);
+
   if (!tempName.value.trim()) return;
 
   addTag(tempName.value);
@@ -603,7 +805,7 @@ const manualAddTag = async () => {
   tempName.value = "";
 
   await nextTick();
-  inputRef.value?.focus(); // يرجع الفوكس للحقل
+  inputRef.value?.focus();
 };
 
 const removeTag = (index) => {
@@ -700,7 +902,9 @@ const openEdit = (item) => {
   form.injuredNames = item.injuredNames || [];
   form.formationId = item.formationId;
   form.incomingBookNumber = item.incomingBookNumber;
-  form.incomingDate = item.incomingDate;
+  form.incomingDate = item.incomingDate
+    ? item.incomingDate.substring(0, 10)
+    : "";
   form.subject = item.subject;
   form.content = item.content;
   form.departmentIds = item.departmentIds || [];
@@ -708,21 +912,25 @@ const openEdit = (item) => {
   modal.show();
 };
 
+const isSaving = ref(false);
 const save = async () => {
+  if (isSaving.value) return;
+  isSaving.value = true;
   try {
     if (!editMode.value) {
       await addIncoming(form);
-      successAlert(" تمت الإضافة بنجاح");
+      successAlert("تمت الإضافة بنجاح");
     } else {
       await updateIncoming(form.id, form);
-      successAlert(" تم التعديل بنجاح");
+      successAlert("تم التعديل بنجاح");
     }
-
     modal.hide();
-    load();
+    await load();
   } catch (e) {
     console.error("خطأ بالحفظ", e);
-    errorAlert(" فشل الحفظ");
+    errorAlert("فشل الحفظ");
+  } finally {
+    isSaving.value = false;
   }
 };
 
@@ -792,40 +1000,35 @@ const handleFiles = (e) => {
   transfer.files = Array.from(e.target.files);
 };
 
+const isTransferring = ref(false);
 const submitTransfer = async () => {
+  if (isTransferring.value) return;
+
+  if (!transfer.incomingId || !transfer.departmentId) {
+    errorAlert("يرجى اختيار الشعبة المراد الترحيل إليها.");
+    return;
+  }
+  isTransferring.value = true;
   try {
-    if (!transfer.incomingId || !transfer.departmentId) {
-      errorAlert("يرجى اختيار الشعبة المراد الترحيل إليها.");
-      return;
-    }
-
     const fd = new FormData();
-
     fd.append("IncomingId", transfer.incomingId);
     fd.append("DepartmentId", transfer.departmentId);
-
     if (transfer.notes) {
       fd.append("Notes", transfer.notes);
     }
-
     if (transfer.files.length > 0) {
       transfer.files.forEach((f) => fd.append("files", f));
     }
-
-    // Debug (اختياري)
-    for (let pair of fd.entries()) {
-      console.log(pair[0] + ":", pair[1]);
-    }
-
     await transferIncoming(fd);
 
     successAlert("تم ترحيل المعاملة بنجاح");
-
     modalTransfer.hide();
     load();
   } catch (e) {
     console.log("خطأ في الترحيل", e);
     errorAlert("حدث خطأ أثناء الترحيل");
+  } finally {
+    isTransferring.value = false;
   }
 };
 
@@ -856,15 +1059,122 @@ const openView = (inc) => {
 
   modalView.show();
 };
-
 const closeView = () => modalView.hide();
 
-/* Init */
+// ==============================
+//  Modal عرض كل أسماء الجرحى
+// ==============================
+const allNames = ref([]);
+const namesModal = ref(null);
+let namesModalInstance = null;
+
+const openNamesModal = (names) => {
+  allNames.value = names;
+  namesModalInstance.show();
+};
+
+const closeNamesModal = () => {
+  namesModalInstance.hide();
+};
+
+const archiveModal = ref(null);
+const archiveUploadModal = ref(null);
+
+let modalArchive = null;
+let modalArchiveUpload = null;
+
+const archiveFiles = ref([]);
+const currentIncomingId = ref("");
+const selectedArchiveFiles = ref([]);
+
+/* فتح عرض المرفقات */
+const openArchive = (inc) => {
+  document.activeElement?.blur();
+  currentIncomingId.value = inc.id;
+  archiveFiles.value = inc.archiveIncoming || [];
+  modalArchive.show();
+};
+
+const openArchiveUploadFromView = () => {
+  modalArchive.hide();
+  modalArchiveUpload.show();
+};
+
+const archiveInputRef = ref(null);
+const archiveInputs = ref([{ files: [] }]);
+const closeArchive = () => modalArchive.hide();
+
+/* فتح رفع مرفقات */
+const openArchiveUpload = (inc) => {
+  document.activeElement?.blur();
+  currentIncomingId.value = inc.id;
+  selectedArchiveFiles.value = [];
+  modalArchiveUpload.show();
+};
+
+const openArchiveDirect = (inc) => {
+  if (!inc.archiveIncoming || inc.archiveIncoming.length === 0) {
+    return errorAlert("لا توجد مرفقات لهذا الوارد");
+  }
+
+  inc.archiveIncoming.forEach((f) => {
+    window.open(f.fileFullUrl, "_blank");
+  });
+};
+
+const closeArchiveUpload = () => modalArchiveUpload.hide();
+
+const onArchiveFilesSelected = (event, index) => {
+  archiveInputs.value[index].files = Array.from(event.target.files);
+};
+
+const submitArchiveUpload = async () => {
+  if (!currentIncomingId.value) {
+    return errorAlert("معاملة غير محددة");
+  }
+
+  // جمع كل الملفات
+  const allFiles = archiveInputs.value.flatMap((x) => x.files);
+
+  if (allFiles.length === 0) {
+    return errorAlert("يرجى اختيار ملفات");
+  }
+
+  try {
+    await uploadIncomingArchive(currentIncomingId.value, allFiles);
+
+    successAlert("تم رفع المرفقات بنجاح");
+    archiveInputs.value = [{ files: [] }];
+    currentIncomingId.value = "";
+
+    modalArchiveUpload.hide();
+    load();
+  } catch (e) {
+    console.error(e);
+    errorAlert("فشل رفع المرفقات");
+  }
+};
+
+const removeArchiveInput = (index) => {
+  archiveInputs.value.splice(index, 1);
+};
+
+const addArchiveInput = () => {
+  archiveInputs.value.push({ files: [] });
+};
+
+const openFile = (url) => {
+  window.open(url, "_blank");
+};
+
 onMounted(() => {
   modal = new Modal(modalEl.value);
   modalAdv = new Modal(advancedModal.value);
   modalTransfer = new Modal(transferModal.value);
   modalView = new Modal(viewModal.value);
+  namesModalInstance = new Modal(namesModal.value);
+  modalArchive = new Modal(archiveModal.value);
+  modalArchiveUpload = new Modal(archiveUploadModal.value);
   load();
   loadDepartments();
   loadFormations();

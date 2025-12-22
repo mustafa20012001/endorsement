@@ -120,7 +120,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">
+          <h5 class="modal-title fw-bold primary">
             {{ isEdit ? "تعديل مستخدم" : "إضافة مستخدم" }}
           </h5>
         </div>
@@ -183,7 +183,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">بحث متقدم</h5>
+          <h5 class="modal-title fw-bold primary">بحث متقدم</h5>
         </div>
 
         <div class="modal-body">
@@ -260,28 +260,29 @@ import "vue3-select/dist/vue3-select.css";
 import { getUsers, addUser, deleteUser , updateUser} from "@/services/users.service.js";
 import { getDepartments } from "@/services/departments.service.js";
 
-/* خيارات الدور */
+/* Role Options */
 const roleOptions = [
   { value: 0, label: "Admin" },
   { value: 1, label: "مدخل البيانات" },
   { value: 2, label: "حفظ وطباعة وإرسال" },
   { value: 3, label: "كتابة هامش الإدارة" },
+  { value: 3, label: "تاييد الاصابة" },
 ];
 
 const roleName = (r) => roleOptions.find((x) => x.value === r)?.label;
 
-/* بيانات */
+/* Data */
 const users = ref([]);
 const formations = ref([]);
 const loading = ref(false);
 
-/* المودلات */
+/* Models */
 const modalEl = ref(null);
 const advancedModal = ref(null);
 let modal = null;
 let modalAdv = null;
 
-/* فورم المستخدم */
+/* User form */
 const isEdit = ref(false);
 
 const form = reactive({
@@ -293,7 +294,7 @@ const form = reactive({
   departmentId: null,
 });
 
-/* الفلاتر */
+/* Filters */
 const filters = reactive({
   fullName: "",
   userName: "",
@@ -302,10 +303,10 @@ const filters = reactive({
   isActive: null,
 });
 
-/* قائمة الشعب */
+/* People's List */
 const departments = ref([]);
 
-/* تحميل الشعب */
+/* Download the people */
 const loadDepartments = async () => {
   try {
     const res = await getDepartments({
@@ -319,7 +320,7 @@ const loadDepartments = async () => {
   }
 };
 
-/* تحميل الحسابات */
+/* Loading Accounts */
 const loadUsers = async () => {
   loading.value = true;
 
@@ -337,7 +338,7 @@ const loadUsers = async () => {
   loading.value = false;
 };
 
-/* فتح/إغلاق مودلات */
+/* Open/Close Models */
 const openAdd = () => {
   isEdit.value = false;
   resetForm();
@@ -361,20 +362,20 @@ const applyAdvanced = () => {
   loadUsers();
 };
 
-/* حذف مستخدم */
+/* Delete user */
 const removeUser = async (id) => {
   await deleteUser(id);
   loadUsers();
 };
 
-/* حفظ */
+/* save */
 const save = async () => {
   try {
     if (!isEdit.value) {
-      // إضافة
+      // Add
       await addUser(form);
     } else {
-      // تعديل 
+      // edit 
       await updateUser(form.id, {
         fullName: form.fullName,
         userName: form.userName,
@@ -404,7 +405,6 @@ const resetForm = () => {
 onMounted(() => {
   modal = new Modal(modalEl.value);
   modalAdv = new Modal(advancedModal.value);
-
   loadUsers();
   loadDepartments();
 });

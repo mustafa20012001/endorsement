@@ -152,7 +152,7 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">
+          <h5 class="modal-title fw-bold primary">
             {{ editMode ? "تعديل تشكيل" : "إضافة تشكيل" }}
           </h5>
         </div>
@@ -242,7 +242,7 @@ const visiblePages = computed(() => {
     end = totalPages.value;
     start = Math.max(1, end - 2);
   }
-  
+
   for (let i = start; i <= end; i++) pages.push(i);
   return pages;
 });
@@ -268,17 +268,15 @@ const openEdit = (item) => {
   modal.show();
 };
 
-
 const save = async () => {
   try {
     const payload = {
-      name: form.name
+      name: form.name,
     };
     if (editMode.value) {
       await updateFormation(form.id, payload);
       successAlert("تم تعديل التشكيل بنجاح");
-    } 
-    else {
+    } else {
       await addFormation(payload);
       successAlert("تمت إضافة التشكيل بنجاح");
     }
@@ -290,7 +288,6 @@ const save = async () => {
     errorAlert("حدث خطأ أثناء الحفظ");
   }
 };
-
 
 const remove = async (id) => {
   const result = await confirmDelete();
@@ -304,7 +301,6 @@ const remove = async (id) => {
     errorAlert("فشل الحذف");
   }
 };
-
 
 const resetForm = () => {
   form.id = "";

@@ -66,7 +66,7 @@
 
             <div class="profile-info">
               <div class="info-row">
-                <span class="label">القسم:</span>
+                <span class="label">الدور:</span>
                 <span class="value">{{ user.departmentName }}</span>
               </div>
 
@@ -93,13 +93,19 @@ import { useRouter } from "vue-router";
 import { routes } from "@/router";
 
 const visibleRoutes = computed(() => {
-  return routes.filter(
-    (r) =>
-      !r.meta?.hideFromNav && // إخفاء الصفحات الخاصة
-      r.children && // فقط الصفحات الرئيسية
-      r.children.length > 0 &&
-      r.children[0].name // التي لها اسم ظاهر
-  );
+  return routes.filter((r) => {
+    // إخفاء الصفحات الخاصة
+    if (r.meta?.hideFromNav) return false;
+
+    // لازم يكون Route رئيسي
+    if (!r.children || !r.children.length || !r.children[0].name) return false;
+
+    // لو ما محدد roles → متاح للجميع
+    if (!r.meta?.roles) return true;
+
+    // فلترة حسب الدور
+    return r.meta.roles.includes(user.value.role);
+  });
 });
 
 const siteUrl = import.meta.env.VITE_BUILD_ADDRESS;

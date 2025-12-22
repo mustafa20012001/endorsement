@@ -1,5 +1,4 @@
 <template>
-  <!-- App Bar -->
   <div
     class="appbar rounded-3 p-3 mb-3 d-flex justify-content-between align-items-center"
   >
@@ -36,9 +35,9 @@
                 <!-- <th>اسم الجريح</th> -->
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
-                <th>موضوع الوارد</th>
-                <th>أضيف بواسطة</th>
-                <th>تاريخ الإضافة</th>
+                <!-- <th>موضوع الوارد</th> -->
+                <!-- <th>أضيف بواسطة</th> -->
+                <!-- <th>تاريخ الإضافة</th> -->
                 <th>الحالة</th>
                 <th>تاريخ الاستلام</th>
                 <th>سبب الرفض</th>
@@ -53,9 +52,9 @@
                 <!-- <td>{{ item.injuredName || "-" }}</td> -->
                 <td>{{ item.incomingBookNumber || "-" }}</td>
                 <td>{{ formatDate(item.incomingDate) }}</td>
-                <td>{{ item.incomingSubject || "-" }}</td>
-                <td>{{ item.createdByUserName }}</td>
-                <td>{{ formatDate(item.createdAt) }}</td>
+                <!-- <td>{{ item.incomingSubject || "-" }}</td> -->
+                <!-- <td>{{ item.createdByUserName }}</td> -->
+                <!-- <td>{{ formatDate(item.createdAt) }}</td> -->
 
                 <!-- الحالة -->
                 <td>
@@ -86,8 +85,14 @@
                       class="button-accept"
                       title="قبول المعاملة"
                       @click="approve(item)"
+                      :disabled="approvingId === item.id"
                     >
-                      <svg class="svgIcon" viewBox="0 0 512 512">
+                      <span
+                        v-if="approvingId === item.id"
+                        class="spinner-border spinner-border-sm text-light"
+                      ></span>
+
+                      <svg v-else class="svgIcon" viewBox="0 0 512 512">
                         <path
                           d="M173.9 439.4L7 272.5c-9.4-9.4-9.4-24.6 
                              0-33.9l22.6-22.6c9.4-9.4 24.6-9.4 
@@ -97,13 +102,20 @@
                         />
                       </svg>
                     </button>
+
                     <!-- رفض -->
                     <button
                       class="button-reject"
                       title="رفض المعاملة"
                       @click="openReject(item)"
+                      :disabled="rejectingId === item.id"
                     >
-                      <svg class="svgIcon" viewBox="0 0 384 512">
+                      <span
+                        v-if="rejectingId === item.id"
+                        class="spinner-border spinner-border-sm text-light"
+                      ></span>
+
+                      <svg v-else class="svgIcon" viewBox="0 0 384 512">
                         <path
                           d="M231.6 256l142.8-142.8c12.5-12.5 12.5-32.7 
                              0-45.2L352 46.1c-12.5-12.5-32.7-12.5-45.2 
@@ -188,8 +200,14 @@ const load = async () => {
   }
 };
 
+const approvingId = ref(null);
+const rejectingId = ref(null);
+
 // ========== قبول ==========
 const approve = async (item) => {
+  if (approvingId.value || rejectingId.value) return;
+
+  approvingId.value = item.id;
   try {
     await changeStatusAuditing({
       incomingId: item.incomingId,
@@ -197,10 +215,12 @@ const approve = async (item) => {
       rejectionReason: null,
     });
 
-    successAlert("تم قبول المعاملة بنجاح");
+    successAlert("تم قبول المعاملة");
     load();
   } catch (e) {
     errorAlert("فشل قبول المعاملة");
+  } finally {
+    approvingId.value = null;
   }
 };
 
@@ -241,6 +261,8 @@ const submitReject = async () => {
     load();
   } catch (e) {
     errorAlert("فشل رفض المعاملة");
+  } finally {
+    rejectingId.value = null;
   }
 };
 

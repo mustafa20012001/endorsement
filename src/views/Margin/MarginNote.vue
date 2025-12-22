@@ -87,9 +87,9 @@
                 </td> -->
 
                 <td>{{ m.incomingBookNumber }}</td>
-                <td>{{formatDate( m.incomingDate) }}</td>
+                <td>{{ formatDate(m.incomingDate) }}</td>
                 <td>{{ m.managerNote }}</td>
-                <td>{{ m.managerNoteDivision || "—" }}</td>  
+                <td>{{ m.managerNoteDivision || "—" }}</td>
                 <td>{{ formatDate(m.createdAt) }}</td>
                 <!-- <td>
                   <span v-if="m.hasOriginalFile" class="badge bg-success"
@@ -112,7 +112,11 @@
                       </svg>
                     </button>
                     <!-- تعديل -->
-                    <button class="button-edit" @click="openEdit(m)">
+                    <button
+                      v-role="[0]"
+                      class="button-edit"
+                      @click="openEdit(m)"
+                    >
                       <svg class="svgIcon" viewBox="0 0 512 512">
                         <path
                           d="M290.74 93.24l-197.5 197.5c-2.5 2.5-4.1 
@@ -127,7 +131,7 @@
                     </button>
 
                     <!-- حذف -->
-                    <button class="button" @click="remove(m.id)">
+                    <button v-role="[0]" class="button" @click="remove(m.id)">
                       <svg class="svgIcon" viewBox="0 0 448 512">
                         <path
                           d="M135.2 17.7L128 32H32c-17.7 0-32 14.3-32 32s14.3 32 
@@ -165,7 +169,6 @@
           </table>
         </div>
       </div>
-      <!-- </div> -->
 
       <!-- Pagination -->
       <nav class="circle-pagination d-flex justify-content-center mt-4">
@@ -199,10 +202,10 @@
   </div>
   <!-- Modal -->
   <div class="modal fade" tabindex="-1" ref="modalEl">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">
+          <h5 class="modal-title fw-bold primary">
             {{ editMode ? "تعديل معلومات" : "إضافة معلومات" }}
           </h5>
         </div>
@@ -210,7 +213,7 @@
         <form @submit.prevent="save">
           <div class="modal-body">
             <div class="row g-3">
-              <div class="col-md-6">
+              <div class="col-md-12">
                 <label class="form-label">هامش المدير</label>
                 <input
                   v-model="form.managerNote"
@@ -220,24 +223,6 @@
               </div>
 
               <!-- <div class="col-md-6">
-                <label class="form-label">هل يوجد ملف أصل؟</label>
-
-                <div class="custom-vue-select-container">
-                  <VueSelect
-                    v-model="form.hasOriginalFile"
-                    :options="[
-                      { label: 'نعم', value: true },
-                      { label: 'لا', value: false },
-                    ]"
-                    label="label"
-                    :reduce="(opt) => opt.value"
-                    searchable
-                    placeholder="اختر الحالة..."
-                  />
-                </div>
-              </div> -->
-
-              <div class="col-md-6">
                 <label class="form-label">إرسال إلى الوحدة:</label>
                 <div class="custom-vue-select-container">
                   <VueSelect
@@ -250,7 +235,7 @@
                     placeholder="اختر الوحدة..."
                   />
                 </div>
-              </div>
+              </div> -->
             </div>
           </div>
 
@@ -258,8 +243,17 @@
             <button type="button" class="btn btn-light" @click="close()">
               إلغاء
             </button>
-            <button class="btn btn-add">
-              {{ editMode ? "حفظ" : "إضافة" }}
+            <button
+              class="btn btn-add"
+              :disabled="isSaving"
+              :class="{ 'btn-saving': isSaving }"
+              @click.prevent="save"
+            >
+              <span
+                v-if="isSaving"
+                class="spinner-border spinner-border-sm me-2"
+              ></span>
+              {{ isSaving ? "جارٍ الحفظ..." : editMode ? "حفظ" : "إضافة" }}
             </button>
           </div>
         </form>
@@ -272,15 +266,14 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">تحويل إلى قسم آخر</h5>
+          <h5 class="modal-title fw-bold primary">تحويل إلى قسم آخر</h5>
         </div>
 
         <form @submit.prevent="transfer">
           <div class="modal-body">
             <div class="row g-3">
               <div class="col-md-12">
-                <label class="form-label">القسم</label>
-
+                <label class="form-label">إرسال إلى الوحدة:</label>
                 <div class="custom-vue-select-container">
                   <VueSelect
                     v-model="transferForm.departmentId"
@@ -302,7 +295,7 @@
                 ></textarea>
               </div>
 
-              <div class="col-md-12">
+              <!-- <div class="col-md-12">
                 <label class="form-label">المرفقات</label>
                 <input
                   type="file"
@@ -310,7 +303,7 @@
                   class="form-control"
                   multiple
                 />
-              </div>
+              </div> -->
             </div>
           </div>
 
@@ -322,12 +315,17 @@
             >
               إلغاء
             </button>
-            <button class="btn btn-primary" :disabled="transferLoading">
+            <button
+              class="btn btn-primary"
+              :disabled="transferLoading"
+              :class="{ 'btn-saving': transferLoading }"
+              @click.prevent="transfer"
+            >
               <span
                 v-if="transferLoading"
-                class="spinner-border spinner-border-sm me-1"
+                class="spinner-border spinner-border-sm me-2"
               ></span>
-              تحويل
+              {{ transferLoading ? "جارٍ التحويل..." : "تحويل" }}
             </button>
           </div>
         </form>
@@ -340,7 +338,7 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">بحث متقدم</h5>
+          <h5 class="modal-title fw-bold primary">بحث متقدم</h5>
         </div>
 
         <div class="modal-body">
@@ -388,7 +386,7 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">أسماء الجرحى</h5>
+          <h5 class="modal-title fw-bold primary">أسماء الجرحى</h5>
         </div>
 
         <div class="modal-body">
@@ -455,8 +453,6 @@ const transferForm = reactive({
   notes: "",
   files: [],
 });
-
-const transferLoading = ref(false);
 
 // ===== Download data =====
 const load = async () => {
@@ -531,9 +527,14 @@ const openEdit = (row) => {
   modal.show();
 };
 
+const isSaving = ref(false);
+
 const save = async () => {
-  if (!incomingId) {
-    errorAlert("لا يمكن الإضافة —بيانات الوارد غير موجودة");
+  if (isSaving.value) return;
+
+  //  تحقق قبل تشغيل السبنر
+  if (!incomingId?.value) {
+    errorAlert("لا يمكن الإضافة — بيانات الوارد غير موجودة");
     return;
   }
 
@@ -543,7 +544,7 @@ const save = async () => {
     departmentIds: form.departmentIds,
   };
 
-  console.log("DATA SENT:", data);
+  isSaving.value = true;
 
   try {
     if (!editMode.value) {
@@ -559,6 +560,8 @@ const save = async () => {
   } catch (error) {
     console.error("SERVER ERROR:", error);
     errorAlert("فشل الحفظ — تحقق من الحقول");
+  } finally {
+    isSaving.value = false;
   }
 };
 
@@ -590,24 +593,39 @@ const handleFileUpload = (event) => {
   transferForm.files = Array.from(event.target.files);
 };
 
+const transferLoading = ref(false);
+
 const transfer = async () => {
+  if (transferLoading.value) return;
+
+  //  تحقق قبل التشغيل
+  if (!transferForm.marginNoteId || !transferForm.departmentId) {
+    errorAlert("يرجى اختيار الجهة المراد التحويل إليها");
+    return;
+  }
+
   transferLoading.value = true;
+
   try {
     const formData = new FormData();
     formData.append("MarginNoteId", transferForm.marginNoteId);
     formData.append("DepartmentId", transferForm.departmentId);
-    formData.append("Notes", transferForm.notes);
+    formData.append("Notes", transferForm.notes || "");
 
-    for (let i = 0; i < transferForm.files.length; i++) {
-      formData.append("files", transferForm.files[i]);
+    if (transferForm.files?.length) {
+      transferForm.files.forEach((file) => {
+        formData.append("files", file);
+      });
     }
 
     await transferMarginNote(formData);
+
+    successAlert("تم التحويل بنجاح");
     transferModal.hide();
-    load(); // Refresh the list
+    load();
   } catch (error) {
     console.error("Error transferring margin note:", error);
-    alert("حدث خطأ أثناء التحويل");
+    errorAlert(" تم إرسال المعاملة إلى هذا القسم مسبقاً  ");
   } finally {
     transferLoading.value = false;
   }

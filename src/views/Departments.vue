@@ -145,7 +145,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content glass-modal">
         <div class="modal-header">
-          <h5 class="modal-title">
+          <h5 class="modal-title fw-bold primary">
             {{ editMode ? "تعديل شعبة" : "إضافة شعبة" }}
           </h5>
         </div>

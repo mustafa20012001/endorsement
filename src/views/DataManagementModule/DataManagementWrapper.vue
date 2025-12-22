@@ -27,6 +27,13 @@
         >
           المراسلات
         </div>
+      <div
+        class="nav-item"
+        :class="{ active: tab === 'Exports' }"
+        @click="tab = 'Exports'"
+      >
+        الصادر
+      </div>
       </div>
     </div>
   
@@ -36,10 +43,9 @@
   
   <script setup>
   import { ref, computed } from "vue";
-  
-  // الصفحات
-  import DataManagement from "./DataManagement.vue";
   import Correspondence from "./Correspondence.vue";
+  import DataManagement from "./DataManagement.vue";
+  import Exports from "./Exports.vue"; 
   
   const tab = ref("management");
   
@@ -50,6 +56,9 @@
   
       case "correspondence":
         return Correspondence;
+
+        case "Exports":
+        return Exports;
   
       default:
         return DataManagement;

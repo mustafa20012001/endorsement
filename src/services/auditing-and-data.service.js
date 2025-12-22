@@ -29,6 +29,6 @@ export const getTransfers = (params) => {
 };
 
 export function changeStatusAuditing(body) {
-  return axios.post("/api/AuditingAndData/change-status", body);
+  return axios.post("/AuditingAndData/change-status", body);
 }
 

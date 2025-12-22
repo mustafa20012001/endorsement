@@ -1728,7 +1728,7 @@ pagination
   color: #12b1d1;
   font-size: 1.15rem;
   font-weight: 800;
-  margin-bottom: 1rem !important;
+  margin-bottom: 2rem !important;
 }
 
 /* عنصر الموقف */
@@ -2221,5 +2221,20 @@ pagination
     justify-content: center;
     align-items: center;
     padding: 40px 0;
+  }
+  
+
+
+  .btn-saving {
+    background-color: #12b1d1 !important;
+    border-color: #12b1d1 !important;
+    color: #fff !important;
+    cursor: not-allowed;
+  }
+  
+  /* تأكيد لون السبنر */
+  .btn-saving .spinner-border {
+    border-color: #ffffff;
+    border-right-color: transparent;
   }
   

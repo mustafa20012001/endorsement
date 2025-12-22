@@ -1,5 +1,4 @@
 <template>
-  <!-- Top App Bar -->
   <div
     class="appbar rounded-3 p-3 mb-3 d-flex align-items-center justify-content-between"
   >
@@ -67,6 +66,7 @@
                 <th>تاريخ الوارد</th>
                 <th>هامش مدير القسم</th>
                 <th>هامش مسوؤل الشعبة</th>
+                <th>الملحقات الطبية</th>
                 <th>الإجراءات</th>
               </tr>
             </thead>
@@ -97,12 +97,18 @@
                 <td>{{ inc.formationName }}</td>
                 <td>{{ inc.incomingBookNumber }}</td>
                 <td>{{ formatDate(inc.incomingDate) }}</td>
-                <td>{{ inc.managerNote || "—" }}</td>  
-                <td>{{ inc.managerNoteDivision || "—" }}</td>  
+                <td>{{ inc.managerNote || "—" }}</td>
+                <td>{{ inc.managerNoteDivision || "—" }}</td>
+                <td>{{ medicalAccessoriesText(inc.medicalAccessories) }}</td>
+
                 <td>
                   <div class="d-flex justify-content-center gap-2">
                     <!-- تعديل -->
-                    <button class="button-edit" @click="openEdit(inc)">
+                    <button
+                      v-role="[0]"
+                      class="button-edit"
+                      @click="openEdit(inc)"
+                    >
                       <svg viewBox="0 0 512 512" class="svgIcon">
                         <path
                           d="M362.7 19.3c25-25 65.5-25
@@ -117,7 +123,7 @@
                     </button>
 
                     <!-- حذف -->
-                    <button class="button" @click="remove(inc.id)">
+                    <button v-role="[0]" class="button" @click="remove(inc.id)">
                       <svg viewBox="0 0 448 512" class="svgIcon">
                         <path
                           d="M135.2 17.7L128 32H32C14.3
@@ -239,7 +245,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">
+          <h5 class="modal-title fw-bold primary">
             {{ editMode ? "تعديل وارد" : "إضافة وارد" }}
           </h5>
         </div>
@@ -321,24 +327,38 @@
                 <label class="form-label">المحتوى</label>
                 <input v-model="form.content" rows="3" class="form-control" />
               </div>
-              <!-- <div class="col-6">
-                <label class="form-label">هامش مدير القسم</label>
-                <input v-model="form.content" rows="3" class="form-control" />
-              </div> -->
               <div class="col-md-6">
-                <label class="form-label">ارسال الى :</label>
+                <label class="form-label">الملحقات الطبية</label>
                 <div class="custom-vue-select-container">
                   <VueSelect
-                    v-model="form.departmentIds"
-                    :options="departments"
-                    label="name"
-                    :reduce="(d) => d.id"
-                    multiple
+                    v-model="form.medicalAccessories"
+                    :options="medicalAccessoriesOptions"
+                    label="label"
+                    :reduce="(o) => o.value"
+                    placeholder="اختر نوع المرفق..."
                     searchable
-                    placeholder="اختر الوحدة..."
+                    clearable
                   />
                 </div>
               </div>
+              <!-- <div class="col-6">
+                <label class="form-label">هامش مدير القسم</label>
+                <input v-model="form.content" rows="3" class="form-control" />
+                   </div> -->
+          <!-- <div class="col-md-6">
+                 <label class="form-label">ارسال الى :</label>
+                 <div class="custom-vue-select-container">
+                  <VueSelect
+                     v-model="form.departmentIds"
+                     :options="departments"
+                     label="name"
+                     :reduce="(d) => d.id"
+                     multiple
+                     searchable
+                     placeholder="اختر الوحدة..."
+                  />
+                </div>
+              </div> -->
             </div>
           </div>
 
@@ -346,8 +366,20 @@
             <button type="button" class="btn btn-light" @click="close()">
               إلغاء
             </button>
-            <button type="submit" class="btn btn-add" @click.stop>
-              {{ editMode ? "حفظ التعديل" : "إضافة" }}
+            <button
+              type="submit"
+              class="btn btn-add"
+              :class="{ 'btn-saving': isSaving }"
+              :disabled="isSaving"
+            >
+              <span
+                v-if="isSaving"
+                class="spinner-border spinner-border-sm me-2"
+              ></span>
+
+              {{
+                isSaving ? "جارٍ الحفظ..." : editMode ? "حفظ التعديل" : "إضافة"
+              }}
             </button>
           </div>
         </form>
@@ -360,7 +392,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">بحث متقدم</h5>
+          <h5 class="modal-title fw-bold primary">بحث متقدم</h5>
         </div>
 
         <div class="modal-body">
@@ -427,7 +459,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">ترحيل المعاملة</h5>
+          <h5 class="modal-title fw-bold primary">ترحيل المعاملة</h5>
         </div>
 
         <div class="modal-body">
@@ -446,7 +478,7 @@
               </div>
             </div>
 
-            <div class="col-md-12">
+            <!-- <div class="col-md-12">
               <label class="form-label">إرفاق ملفات</label>
               <input
                 type="file"
@@ -454,7 +486,7 @@
                 @change="handleFiles"
                 class="form-control"
               />
-            </div>
+            </div> -->
 
             <div class="col-md-12">
               <label class="form-label">ملاحظات</label>
@@ -469,7 +501,19 @@
 
         <div class="modal-footer">
           <button class="btn btn-light" @click="closeTransfer()">إلغاء</button>
-          <button class="btn btn-add" @click="submitTransfer()">تحويل</button>
+          <button
+            class="btn btn-add"
+            :class="{ 'btn-saving': isTransferring }"
+            :disabled="isTransferring"
+            @click="submitTransfer"
+          >
+            <span
+              v-if="isTransferring"
+              class="spinner-border spinner-border-sm me-2"
+            ></span>
+
+            {{ isTransferring ? "جارٍ الترحيل..." : "تحويل" }}
+          </button>
         </div>
       </div>
     </div>
@@ -480,7 +524,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">عرض تفاصيل الوارد</h5>
+          <h5 class="modal-title fw-bold primary">عرض تفاصيل الوارد</h5>
         </div>
 
         <div class="modal-body">
@@ -569,7 +613,7 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">أسماء الجرحى</h5>
+          <h5 class="modal-title fw-bold primary">أسماء الجرحى</h5>
         </div>
 
         <div class="modal-body">
@@ -596,7 +640,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">
+          <h5 class="modal-title fw-bold primary">
             <i class="bi bi-folder2-open me-1"></i>
             مرفقات الوارد
           </h5>
@@ -631,13 +675,10 @@
 
         <div class="modal-footer">
           <button class="btn btn-light" @click="closeArchive()">إغلاق</button>
-          <button
-              class="btn btn-primary"
-              @click="openArchiveUploadFromView"
-            >
-              <i class="bi bi-cloud-upload me-1"></i>
-              إضافة مرفقات
-            </button>
+          <button class="btn btn-primary" @click="openArchiveUploadFromView">
+            <i class="bi bi-cloud-upload me-1"></i>
+            إضافة مرفقات
+          </button>
         </div>
       </div>
     </div>
@@ -649,7 +690,7 @@
       <div class="modal-content">
         <!-- Header -->
         <div class="modal-header">
-          <h5 class="modal-title">
+          <h5 class="modal-title fw-bold primary">
             <i class="bi bi-cloud-upload me-1"></i>
             إضافة مرفقات
           </h5>
@@ -670,7 +711,6 @@
               class="form-control"
               @change="onArchiveFilesSelected($event, index)"
             />
-
             <!-- حذف -->
             <button
               v-if="archiveInputs.length > 1"
@@ -681,12 +721,7 @@
               <i class="bi bi-trash"></i>
             </button>
           </div>
-
-          <!-- إضافة حقل -->
-          <button
-            class="btn btn-search w-100 mt-3"
-            @click="addArchiveInput"
-          >
+          <button class="btn btn-search w-100 mt-3" @click="addArchiveInput">
             <i class="bi bi-plus-lg me-1"></i>
             إضافة مرفق آخر
           </button>
@@ -768,25 +803,26 @@ const resetFilters = () => {
   load();
 };
 
+const medicalAccessoriesOptions = [
+  { label: "أشعة سينية", value: 0 }, 
+  { label: "سونار", value: 1 }, 
+  { label: "فحوصات", value: 2 }, 
+  { label: "قرص (CD)", value: 3 },
+];
+
 const tempName = ref("");
 const inputRef = ref(null);
 
 const addTag = (newTag) => {
   newTag = newTag.trim();
   if (!newTag) return;
-
   form.injuredNames.push(newTag);
 };
 
 const manualAddTag = async () => {
-  console.log("ENTER PRESSED:", tempName.value);
-
   if (!tempName.value.trim()) return;
-
   addTag(tempName.value);
-
   tempName.value = "";
-
   await nextTick();
   inputRef.value?.focus();
 };
@@ -798,7 +834,6 @@ const removeTag = (index) => {
 /* Load Data */
 const load = async () => {
   loading.value = true;
-
   try {
     const res = await getIncomings({
       pageNumber: page.value,
@@ -811,7 +846,6 @@ const load = async () => {
       incomingDateTo: filters.incomingDateTo || null,
       createdByUserId: filters.createdByUserId || null,
     });
-
     incomingList.value = res.data.data;
     totalPages.value = res.data.pagination.totalPages;
   } finally {
@@ -875,6 +909,7 @@ const form = reactive({
   subject: "",
   content: "",
   departmentIds: [],
+  medicalAccessories: null,
 });
 
 const openAdd = () => ((editMode.value = false), reset(), modal.show());
@@ -885,29 +920,38 @@ const openEdit = (item) => {
   form.injuredNames = item.injuredNames || [];
   form.formationId = item.formationId;
   form.incomingBookNumber = item.incomingBookNumber;
-  form.incomingDate = item.incomingDate;
+  form.incomingDate = item.incomingDate
+    ? item.incomingDate.substring(0, 10)
+    : "";
   form.subject = item.subject;
   form.content = item.content;
   form.departmentIds = item.departmentIds || [];
-
+  form.medicalAccessories = item.medicalAccessories;
   modal.show();
 };
 
+const isSaving = ref(false);
 const save = async () => {
+  if (isSaving.value) return;
+
+  isSaving.value = true;
+
   try {
     if (!editMode.value) {
       await addIncoming(form);
-      successAlert(" تمت الإضافة بنجاح");
+      successAlert("تمت الإضافة بنجاح");
     } else {
       await updateIncoming(form.id, form);
-      successAlert(" تم التعديل بنجاح");
+      successAlert("تم التعديل بنجاح");
     }
 
     modal.hide();
-    load();
+    await load();
   } catch (e) {
     console.error("خطأ بالحفظ", e);
-    errorAlert(" فشل الحفظ");
+    errorAlert("فشل الحفظ");
+  } finally {
+    isSaving.value = false;
   }
 };
 
@@ -938,6 +982,7 @@ const reset = () => {
   form.incomingBookNumber = "";
   form.departmentIds = [];
   tempName.value = "";
+  form.medicalAccessories = null;
 };
 
 const close = () => modal.hide();
@@ -977,13 +1022,19 @@ const handleFiles = (e) => {
   transfer.files = Array.from(e.target.files);
 };
 
+const isTransferring = ref(false);
 const submitTransfer = async () => {
-  try {
-    if (!transfer.incomingId || !transfer.departmentId) {
-      errorAlert("يرجى اختيار الشعبة المراد الترحيل إليها.");
-      return;
-    }
+  if (isTransferring.value) return;
 
+  // تحقق قبل تفعيل السبنر
+  if (!transfer.incomingId || !transfer.departmentId) {
+    errorAlert("يرجى اختيار الشعبة المراد الترحيل إليها.");
+    return;
+  }
+
+  isTransferring.value = true;
+
+  try {
     const fd = new FormData();
 
     fd.append("IncomingId", transfer.incomingId);
@@ -997,20 +1048,16 @@ const submitTransfer = async () => {
       transfer.files.forEach((f) => fd.append("files", f));
     }
 
-    // Debug (اختياري)
-    for (let pair of fd.entries()) {
-      console.log(pair[0] + ":", pair[1]);
-    }
-
     await transferIncoming(fd);
 
     successAlert("تم ترحيل المعاملة بنجاح");
-
     modalTransfer.hide();
     load();
   } catch (e) {
     console.log("خطأ في الترحيل", e);
-    errorAlert("حدث خطأ أثناء الترحيل");
+    errorAlert("تم إرسال الوارد إلى هذا القسم مسبقاً");
+  } finally {
+    isTransferring.value = false;
   }
 };
 
@@ -1069,7 +1116,7 @@ const archiveFiles = ref([]);
 const currentIncomingId = ref("");
 const selectedArchiveFiles = ref([]);
 
-/* فتح عرض المرفقات */
+/*   open Archive */
 const openArchive = (inc) => {
   document.activeElement?.blur();
   currentIncomingId.value = inc.id;
@@ -1086,7 +1133,7 @@ const archiveInputRef = ref(null);
 const archiveInputs = ref([{ files: [] }]);
 const closeArchive = () => modalArchive.hide();
 
-/* فتح رفع مرفقات */
+
 const openArchiveUpload = (inc) => {
   document.activeElement?.blur();
   currentIncomingId.value = inc.id;
@@ -1147,6 +1194,24 @@ const addArchiveInput = () => {
 
 const openFile = (url) => {
   window.open(url, "_blank");
+};
+
+const medicalAccessoriesText = (value) => {
+  switch (value) {
+    case 0:
+      return "أشعة ";
+    case 1:
+      return "سونار";
+    case 2:
+      return "فحوصات";
+    case 3:
+      return "قرص (CD)";
+    case null:
+    case undefined:
+      return "—";
+    default:
+      return "غير معروف";
+  }
 };
 
 onMounted(() => {

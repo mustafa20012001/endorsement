@@ -26,6 +26,7 @@
           v-model="filters.injuredName"
           class="form-control"
           placeholder="بحث باسم الجريح..."
+         @keyup.enter="load"
         />
       </div>
 
@@ -41,7 +42,7 @@
   <!-- Table -->
   <div class="card shadow-sm border-0 mb-4">
     <div class="card-header custom-card-header">
-      <h5 class="mb-0 fw-bold primary">قائمة تأييدات الإصابة</h5>
+      <h5 class="mb-0 fw-bold primary">قائمة معاملات التدقيق</h5>
     </div>
 
     <div class="card-body">
@@ -51,17 +52,33 @@
 
       <div v-else class="card inner-card">
         <div class="table-responsive">
-          <table class="table custom-table align-middle text-center mb-0">
+          <table
+            class="table custom-table align-middle text-center mb-0 truncate-table"
+          >
             <thead>
               <tr>
                 <th>#</th>
                 <th>اسم الجريح</th>
-                <th>الأم</th>
+                <th>اسم الأم</th>
+                <th>تاريخ الولادة</th>
+                <th>رقم الهاتف</th>
                 <th>نوع الإصابة</th>
                 <th>الحالة</th>
                 <th>رقم الكتاب</th>
                 <th>تاريخ الحادث</th>
+                <th>مكان الحادث</th>
+                <th>مكان الإصابة</th>
                 <th>التشكيل</th>
+                <th>السنة</th>
+                <!-- <th>الحالة النهائية</th> -->
+                <!-- <th>الرمز العشوائي</th> -->
+                <th>بطاقة طوارئ</th>
+                <th>الموقف التأييد</th>
+                <th>رقم الصدور</th>
+                <th>تاريخ الصدور</th>
+                <th>الجهة المؤيدة</th>
+                <th>أُضيف بواسطة</th>
+                <th>تاريخ الإضافة</th>
                 <th>QR</th>
                 <th>إجراءات</th>
               </tr>
@@ -70,13 +87,58 @@
             <tbody>
               <tr v-for="(item, idx) in list" :key="item.id">
                 <td>{{ (page - 1) * pageSize + idx + 1 }}</td>
-                <td>{{ item.injuredName }}</td>
-                <td>{{ item.motherName }}</td>
+                <td class="text-truncate" style="max-width: 180px">
+                  {{ item.injuredName }}
+                </td>
+                <td class="text-truncate" style="max-width: 180px">
+                  {{ item.motherName }}
+                </td>
+
+                <td>{{ formatDate(item.birthDate) }}</td>
+                <td>{{ item.phoneNumber || "—" }}</td>
+
                 <td>{{ injuryTypeText(item.injuryType) }}</td>
                 <td>{{ injuryStatusText(item.status) }}</td>
+
                 <td>{{ item.bookNumber }}</td>
                 <td>{{ formatDate(item.accidentDate) }}</td>
+
+                <td>{{ item.accidentPlace }}</td>
+                <td>{{ item.injuryPlace }}</td>
+
                 <td>{{ item.formationName }}</td>
+                <td>{{ item.year }}</td>
+
+                <!-- <td>{{ item.finalStatus ?? "—" }}</td> -->
+                <!-- <td>{{ item.randomCode }}</td> -->
+
+                <td>
+                  <span :class="yesNoDisplay(item.emergencyCard).class">
+                    <i
+                      :class="`bi ${
+                        yesNoDisplay(item.emergencyCard).icon
+                      } me-1`"
+                    ></i>
+                    {{ yesNoDisplay(item.emergencyCard).text }}
+                  </span>
+                </td>
+                <td>
+                  <span :class="yesNoDisplay(item.supportiveStance).class">
+                    <i
+                      :class="`bi ${
+                        yesNoDisplay(item.supportiveStance).icon
+                      } me-1`"
+                    ></i>
+                    {{ yesNoDisplay(item.supportiveStance).text }}
+                  </span>
+                </td>
+
+                <td>{{ item.issueNumber }}</td>
+                <td>{{ formatDate(item.issueDate) }}</td>
+                <td>{{ item.supportingCentralism }}</td>
+
+                <td>{{ item.createdByUserName }}</td>
+                <td>{{ formatDate(item.createdAt) }}</td>
 
                 <!-- QR Code -->
                 <td>
@@ -118,12 +180,28 @@
                         />
                       </svg>
                     </button>
+                    <button
+  c                   class="button-archive"
+                      title="عرض المرفقات"
+                      @click="openArchive(item)"
+                    >
+                      <svg class="svgIcon" viewBox="0 0 512 512">
+                        <path
+                          d="M424.4 214.7L253.1 386c-35.2 35.2-92.3 35.2-127.5 0
+                             s-35.2-92.3 0-127.5L300.3 83.9c23.4-23.4 61.4-23.4
+                             84.9 0s23.4 61.4 0 84.9L224.6 329.4c-11.7 11.7-30.7
+                             11.7-42.4 0s-11.7-30.7 0-42.4L318.1 151c6.2-6.2
+                             6.2-16.4 0-22.6s-16.4-6.2-22.6 0L159.6 264.3"
+                        />
+                      </svg>
+                    </button>
+
                   </div>
                 </td>
               </tr>
 
               <tr v-if="list.length === 0">
-                <td colspan="10" class="py-5 text-muted">
+                <td colspan="17" class="py-5 text-muted">
                   <i class="bi bi-inboxes fs-1"></i>
                   لا توجد بيانات
                 </td>
@@ -169,7 +247,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">
+          <h5 class="modal-title fw-bold primary">
             {{ editMode ? "تعديل التأييد" : "إضافة تأييد" }}
           </h5>
         </div>
@@ -266,6 +344,68 @@
               </div>
 
               <div class="col-md-6">
+                <label class="form-label">بطاقة طوارئ</label>
+                <div class="custom-vue-select-container">
+                  <VueSelect
+                    v-model="form.emergencyCard"
+                    :options="yesNoOptions"
+                    label="label"
+                    :reduce="(o) => o.value"
+                    placeholder="اختر..."
+                    clearable
+                  />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">الموقف التأييد</label>
+                <div class="custom-vue-select-container">
+                  <VueSelect
+                    v-model="form.supportiveStance"
+                    :options="yesNoOptions"
+                    label="label"
+                    :reduce="(o) => o.value"
+                    placeholder="اختر..."
+                    clearable
+                  />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">رقم الصدور</label>
+                <input v-model="form.issueNumber" class="form-control" />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">تاريخ الصدور</label>
+                <input
+                  type="date"
+                  v-model="form.issueDate"
+                  class="form-control"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">الجهة المؤيدة</label>
+                <input
+                  v-model="form.supportingCentralism"
+                  class="form-control"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">الرقم المركزي</label>
+                <input v-model="form.centralNumber" class="form-control" />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">تاريخ المركزية</label>
+                <input
+                  type="date"
+                  v-model="form.dateCentrality"
+                  class="form-control"
+                />
+              </div>
+
+              <div class="col-md-6">
                 <label class="form-label">التشكيل</label>
 
                 <div class="custom-vue-select-container">
@@ -296,30 +436,118 @@
   </div>
 
   <!-- QR Modal -->
-<!-- QR Modal -->
-<div class="modal fade" ref="qrModalEl">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content qr-modal">
-      <div class="qr-header">
-        <h4>رمز  QR</h4>
+  <div class="modal fade" ref="qrModalEl">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content qr-modal">
+        <div class="qr-header">
+          <h4>رمز QR</h4>
+        </div>
+
+        <div class="qr-body text-center">
+          <div id="qrPrintArea">
+            <qrcode-vue :value="selectedQR" :size="210" level="H" />
+            <!-- <p class="qr-url mt-3">{{ selectedQR }}</p> -->
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <!-- <button class="btn btn-outline-secondary w-50" @click="printQR">
+        طباعة
+        </button> -->
+          <button type="button" class="btn btn-light" @click="hide">
+            إلغاء
+          </button>
+          <button class="btn btn-primary" @click="openQRInTab">
+            عرض المعلومات
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Archive Modal -->
+<div class="modal fade" ref="archiveModalEl" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold primary">
+          <i class="bi bi-folder2-open me-1"></i>
+          مرفقات الوارد
+        </h5>
       </div>
 
-      <div class="qr-body text-center">
-        <div id="qrPrintArea">
-          <qrcode-vue :value="selectedQR" :size="210" level="H" />
-          <!-- <p class="qr-url mt-3">{{ selectedQR }}</p> -->
+      <div class="modal-body">
+        <div
+          v-if="archiveFiles.length === 0"
+          class="text-muted text-center py-4"
+        >
+          <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+          لا توجد مرفقات
+        </div>
+
+        <div v-else class="list-group">
+          <button
+            v-for="(file, i) in archiveFiles"
+            :key="i"
+            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+            @click="openFile(file.fileFullUrl)"
+          >
+            <span>{{ file.fileName }}</span>
+            <i class="bi bi-box-arrow-up-right"></i>
+          </button>
         </div>
       </div>
 
       <div class="modal-footer">
-        <!-- <button class="btn btn-outline-secondary w-50" @click="printQR">
-        طباعة
-        </button> -->
-        <button type="button" class="btn btn-light" @click="modal.hide()">
-              إلغاء
+        <button class="btn btn-light" @click="closeArchive">إغلاق</button>
+        <button class="btn btn-primary" @click="openUpload">
+          إضافة مرفقات
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal fade" ref="uploadModalEl" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold primary">رفع مرفقات</h5>
+      </div>
+
+      <div class="modal-body">
+        <div
+            v-for="(item, index) in archiveInputs"
+            :key="index"
+            class="d-flex gap-2 mb-2"
+          >
+            <input
+              type="file"
+              multiple
+              class="form-control"
+              @change="onArchiveFilesSelected($event, index)"
+            />
+
+            <button
+              v-if="archiveInputs.length > 1"
+              class="btn btn-outline-danger"
+              @click="removeArchiveInput(index)"
+            >
+              <i class="bi bi-trash"></i>
             </button>
-        <button class="btn btn-primary " @click="openQRInTab">
-         عرض المعلومات 
+          </div>
+
+         <button class="btn btn-search w-100 mt-3" 
+            @click="addArchiveInput"
+          >
+            <i class="bi bi-plus-lg me-1"></i>
+            إضافة مرفق آخر
+          </button>
+        </div>
+      <div class="modal-footer">
+        <button class="btn btn-light" @click="closeUpload">إلغاء</button>
+        <button class="btn btn-primary" @click="upload">
+          رفع
         </button>
       </div>
     </div>
@@ -329,15 +557,12 @@
 </template>
 
 <script setup>
-/* ---------------------- Imports ----------------------- */
 import { ref, reactive, onMounted, computed } from "vue";
 import { Modal } from "bootstrap";
 import QrcodeVue from "qrcode.vue";
 import VueSelect from "vue3-select";
 import "vue3-select/dist/vue3-select.css";
-import api from "@/services/services.js";
 import { successAlert, errorAlert, confirmDelete } from "@/utils/alert.js";
-
 import {
   getInjurySupports,
   addInjurySupport,
@@ -346,8 +571,7 @@ import {
   getIncomings,
   getFormations,
 } from "@/services/injury-supports.service.js";
-
-/* ---------------------- ENUMS ----------------------- */
+import { uploadIncomingArchive } from "@/services/incoming-archive.service";
 const injuryTypeOptions = [
   { value: 0, label: "حكومي" },
   { value: 1, label: "ميداني" },
@@ -360,39 +584,69 @@ const injuryStatusOptions = [
   { value: 1, label: "مريض" },
 ];
 
+const yesNoOptions = [
+  { label: "نعم", value: 1 },
+  { label: "لا", value: 0 },
+];
+
+const yesNoDisplay = (value) => {
+  if (value === 1)
+    return {
+      text: "نعم",
+      class: "badge bg-success",
+      icon: "bi-check-circle-fill",
+    };
+
+  if (value === 0)
+    return {
+      text: "لا",
+      class: "badge bg-danger",
+      icon: "bi-x-circle-fill",
+    };
+
+  return {
+    text: "—",
+    class: "badge bg-secondary",
+    icon: "bi-dash-circle",
+  };
+};
+
 // هذه تستخدم في الجدول لعرض النص
 const injuryTypeText = (v) =>
   injuryTypeOptions.find((x) => x.value === v)?.label ?? v;
-
 const injuryStatusText = (v) =>
   injuryStatusOptions.find((x) => x.value === v)?.label ?? v;
 
 // هذه تستخدم في VueSelect للحالة
 const injuryStatusSelect = injuryStatusOptions;
-
-/* ---------------------- STATE ----------------------- */
 const list = ref([]);
 const loading = ref(false);
-
 const page = ref(1);
 const pageSize = 10;
 const totalPages = ref(1);
 const allIncomingsRaw = ref([]);
-
 const filters = reactive({
   injuredName: "",
 });
 
+const archiveModalEl = ref(null);
+const uploadModalEl = ref(null);
+
+let archiveModal = null;
+let uploadModal = null;
+
+const archiveFiles = ref([]);
+const currentIncomingId = ref(null);
+
 /* الجرحى من incoming */
 const incomings = ref([]);
-
 /* تشكيلات + VueSelect-ready */
 const formations = ref([]);
 const formationsSelect = ref([]);
 
-/* ---------------------- Form Model ----------------------- */
 const form = reactive({
   id: "",
+  incomingId: "",
   injuredPersonId: "",
   motherName: "",
   birthDate: "",
@@ -405,20 +659,25 @@ const form = reactive({
   formationId: null,
   status: 0,
   year: new Date().getFullYear(),
+  // الحقول الجديدة
+  emergencyCard: null,
+  supportiveStance: null,
+  issueNumber: "",
+  issueDate: "",
+  supportingCentralism: "",
+  centralNumber: "",
+  dateCentrality: "",
 });
 
-/* ---------------------- Pagination ----------------------- */
 const visiblePages = computed(() => {
   const pages = [];
   let start = page.value - 1;
   if (start < 1) start = 1;
-
   let end = start + 2;
   if (end > totalPages.value) {
     end = totalPages.value;
     start = Math.max(1, end - 2);
   }
-
   for (let i = start; i <= end; i++) pages.push(i);
   return pages;
 });
@@ -429,7 +688,6 @@ const changePage = (p) => {
   load();
 };
 
-/* ---------------------- MODALS ----------------------- */
 const modalEl = ref(null);
 let modal = null;
 
@@ -437,7 +695,10 @@ const qrModalEl = ref(null);
 let qrModal = null;
 const selectedQR = ref("");
 
-/* ---------------------- HELPERS ----------------------- */
+const archiveInputs = ref([
+  { files: [] },
+]);
+
 const formatDate = (d) => {
   if (!d) return "-";
   const dt = new Date(d);
@@ -463,6 +724,13 @@ const resetForm = () => {
     formationId: null,
     status: 0,
     year: new Date().getFullYear(),
+    emergencyCard: 0,
+    supportiveStance: 0,
+    issueNumber: "",
+    issueDate: "",
+    supportingCentralism: "",
+    centralNumber: "",
+    dateCentrality: "",
   });
 };
 
@@ -472,7 +740,6 @@ const resetFilters = () => {
   load();
 };
 
-/* ---------------------- LOAD LIST ----------------------- */
 const load = async () => {
   loading.value = true;
   try {
@@ -481,7 +748,6 @@ const load = async () => {
       pageSize,
       injuredName: filters.injuredName || null,
     });
-
     const resp = res.data;
     list.value = resp.data || [];
     totalPages.value = resp.pagination?.totalPages || 1;
@@ -492,21 +758,17 @@ const load = async () => {
   loading.value = false;
 };
 
-/* ---------------------- LOAD INCOMINGS ----------------------- */
 const loadIncomings = async () => {
   try {
     const res = await getIncomings();
     const data = res.data.data || [];
-
     allIncomingsRaw.value = data;
-
     incomings.value = data.flatMap((x) =>
       x.injuredPersonIds.map((pid, index) => ({
         value: pid,
         label: x.injuredNames[index],
       }))
     );
-
     return incomings.value;
   } catch (e) {
     console.error("خطأ تحميل الجرحى", e);
@@ -519,30 +781,24 @@ const getInjuredPersonIdForSupport = (support) => {
     (x) => x.id === support.incomingId
   );
   if (!incoming) return null;
-
   const index = incoming.injuredNames.indexOf(support.injuredName);
   if (index === -1) return null;
-
   return incoming.injuredPersonIds[index] || null;
 };
 
 const onInjuredSelected = (value) => {
   const p = incomings.value.find((x) => x.value === value);
   if (!p) return;
-
   form.injuredPersonId = value;
   form.motherName = p.motherName || "";
   form.birthDate = p.birthDate?.substring(0, 10) || "";
 };
 
-/* ---------------------- LOAD FORMATIONS ----------------------- */
 const loadFormations = async () => {
   try {
     const res = await getFormations();
-
     const data = res.data.data || res.data || [];
     formations.value = data;
-
     formationsSelect.value = formations.value.map((f) => ({
       value: f.id,
       label: f.name,
@@ -552,9 +808,7 @@ const loadFormations = async () => {
   }
 };
 
-/* ---------------------- ACTIONS ----------------------- */
 const editMode = ref(false);
-
 const openAdd = async () => {
   editMode.value = false;
   await loadIncomings();
@@ -566,6 +820,8 @@ const openEdit = async (item) => {
   editMode.value = true;
 
   await loadIncomings();
+  const injuredPersonId = getInjuredPersonIdForSupport(item);
+
   Object.assign(form, {
     id: item.id,
     injuredPersonId: item.injuredPersonId,
@@ -580,6 +836,13 @@ const openEdit = async (item) => {
     formationId: item.formationId,
     status: item.status,
     year: item.year || new Date().getFullYear(),
+    emergencyCard: item.emergencyCard ?? 0,
+    supportiveStance: item.supportiveStance ?? 0,
+    issueNumber: item.issueNumber,
+    issueDate: item.issueDate?.substring(0, 10) || "",
+    supportingCentralism: item.supportingCentralism,
+    centralNumber: item.centralNumber,
+    dateCentrality: item.dateCentrality?.substring(0, 10) || "",
   });
 
   modal.show();
@@ -602,6 +865,14 @@ const save = async () => {
     formationId: form.formationId,
     status: form.status,
     year: form.year,
+    // 🆕 الحقول الجديدة
+    emergencyCard: form.emergencyCard,
+    supportiveStance: form.supportiveStance,
+    issueNumber: form.issueNumber,
+    issueDate: form.issueDate,
+    supportingCentralism: form.supportingCentralism,
+    centralNumber: form.centralNumber,
+    dateCentrality: form.dateCentrality,
   };
 
   try {
@@ -634,7 +905,6 @@ const removeItem = async (id) => {
   }
 };
 
-/* ---------------------- QR ----------------------- */
 const getBaseUrl = () => {
   if (window.location && window.location.origin) {
     return window.location.origin;
@@ -644,12 +914,10 @@ const getBaseUrl = () => {
 
 const getQRUrl = (item) => {
   const hostname = window.location.hostname;
-
   // 1- لو النظام يشتغل محليًا على الكمبيوتر
   if (hostname === "localhost") {
     return `http://localhost:5173/injury-support-view/${item.id}`;
   }
-
   // 2- لو النظام يشتغل على شبكة LAN (كمبيوتر + موبايل)
   if (
     hostname.startsWith("192.") ||
@@ -658,14 +926,11 @@ const getQRUrl = (item) => {
   ) {
     return `http://${hostname}:5173/injury-support-view/${item.id}`;
   }
-
   // 3- لو النظام مرفوع على دومين (Production)
   return `https://${hostname}/injury-support-view/${item.id}`;
 };
 
 const openQR = (code) => {
-  console.log("QR URL =", code);
-
   selectedQR.value = code;
   qrModal.show();
   // window.open(code, "_blank");
@@ -679,7 +944,6 @@ const openQRInTab = () => {
 const printQR = () => {
   const printContent = document.getElementById("qrPrintArea").innerHTML;
   const w = window.open("", "", "width=600,height=600");
-
   w.document.write(`
     <html>
       <head>
@@ -705,19 +969,96 @@ const printQR = () => {
       </body>
     </html>
   `);
-
   w.document.close();
   w.focus();
   w.print();
   w.close();
 };
 
+const hide = () => {
+  document.activeElement?.blur();
+  qrModal.hide();
+};
 
-/* ---------------------- INIT ----------------------- */
+const openArchive = (item) => {
+  archiveFiles.value = item.archiveIncoming?.items || [];
+  currentIncomingId.value = item.incomingId;
+  archiveModal.show();
+};
+
+const closeArchive = () => {
+  archiveModal.hide();
+};
+
+const openUpload = () => {
+  archiveModal.hide();
+  uploadModal.show();
+};
+
+const closeUpload = () => {
+  uploadModal.hide();
+  selectedFiles.value = [];
+};
+
+
+
+const upload = async () => {
+  if (!currentIncomingId.value) {
+    return errorAlert("المعاملة غير محددة");
+  }
+
+  // جمع كل الملفات من جميع inputs
+  const allFiles = archiveInputs.value.flatMap(x => x.files);
+
+  if (allFiles.length === 0) {
+    return errorAlert("يرجى اختيار ملف واحد على الأقل");
+  }
+
+  try {
+    const res = await uploadIncomingArchive(
+      currentIncomingId.value,
+      allFiles
+    );
+
+    successAlert("تم رفع المرفقات بنجاح");
+
+    archiveFiles.value.push(...(res.data.data || []));
+
+    // reset
+    archiveInputs.value = [{ files: [] }];
+    uploadModal.hide();
+    archiveModal.show();
+  } catch (e) {
+    console.error(e);
+    errorAlert("فشل رفع المرفقات");
+  }
+};
+
+
+const addArchiveInput = () => {
+  archiveInputs.value.push({ files: [] });
+};
+
+const onArchiveFilesSelected = (event, index) => {
+  archiveInputs.value[index].files = Array.from(event.target.files);
+};
+
+const removeArchiveInput = (index) => {
+  if (archiveInputs.value.length === 1) return;
+  archiveInputs.value.splice(index, 1);
+};
+
+const openFile = (url) => {
+  window.open(url, "_blank");
+};
+
+
+
 onMounted(() => {
   modal = new Modal(modalEl.value);
   qrModal = new Modal(qrModalEl.value);
-
+  archiveModal = new Modal(archiveModalEl.value);
+  uploadModal = new Modal(uploadModalEl.value);
   load();
   loadIncomings();
   loadFormations();
@@ -789,5 +1130,14 @@ onMounted(() => {
     opacity: 1;
     transform: scale(1);
   }
+}
+
+.truncate-table th,
+.truncate-table td {
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
 }
 </style>

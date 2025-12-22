@@ -28,6 +28,7 @@ export const routes = [
   {
     path: `${baseUrl}/about`,
     component: () => import("@/layouts/Page.vue"),
+    meta: { roles: [0] }, 
     children: [
       { path: "", name: "لوحة ", component: () => import("@/views/Dashboard/About.vue") },
     ],
@@ -36,6 +37,7 @@ export const routes = [
   {
     path: `${baseUrl}/incoming`,
     component: () => import("@/layouts/Page.vue"),
+    meta: { roles: [0, 1] }, // Admin, EntryData
     children: [
       {
         path: "",
@@ -48,6 +50,7 @@ export const routes = [
   {
     path: `${baseUrl}/margin-note`,
     component: () => import("@/layouts/Page.vue"),
+    meta: { roles: [0, 1] }, // Admin, MarginEntry
     children: [
       {
         path: "",
@@ -60,10 +63,11 @@ export const routes = [
   {
     path: `${baseUrl}/division-flow`,
     component: () => import("@/layouts/Page.vue"),
+    meta: { roles: [0, 3] }, 
     children: [
       {
         path: "",
-        name: " الإداري",
+        name: " هامش مسوؤل الشعبة",
         component: () => import("@/views/Divisionfolder/DivisionTabs.vue")
       },
     ],
@@ -72,10 +76,11 @@ export const routes = [
   {
     path: `${baseUrl}/data-management`,
     component: () => import("@/layouts/Page.vue"),
+    meta: { roles: [0, 3] }, 
     children: [
       {
         path: "",
-        name: "الإدارة ",
+        name: "شعبة الأدارة ",
         component: () =>
           import("@/views/DataManagementModule/DataManagementWrapper.vue"),
       },
@@ -84,29 +89,31 @@ export const routes = [
   {
     path: `${baseUrl}/flow`,
     component: () => import("@/layouts/Page.vue"),
+    meta: { roles: [0, 2] }, // Admin, Verifier
     children: [
       {
         path: "",
-        name: " البيانات والتدقيق",
+        name: "البيانات والتدقيق",
         component: () => import("@/views/FlowWrapper/FlowWrapper.vue"),
       },
     ],
   },
-  {
-    path: `${baseUrl}/return-flow`,
-    component: () => import("@/layouts/Page.vue"),
-    children: [
-      {
-        path: "",
-        name: "الاسترجاع",
-        component: () => import("@/views/ReturnWrapper/ReturnWrapper.vue"),
-      },
-    ],
-  },
+  // {
+  //   path: `${baseUrl}/return-flow`,
+  //   component: () => import("@/layouts/Page.vue"),
+  //   children: [
+  //     {
+  //       path: "",
+  //       name: "الاسترجاع",
+  //       component: () => import("@/views/ReturnWrapper/ReturnWrapper.vue"),
+  //     },
+  //   ],
+  // },
 
   {
     path: `${baseUrl}/injury-supports`,
     component: () => import("@/layouts/Page.vue"),
+    meta: { roles: [0 , 4] }, 
     children: [
       {
         path: "",
@@ -118,6 +125,7 @@ export const routes = [
   {
     path: `${baseUrl}/contacts`,
     component: () => import("@/layouts/Page.vue"),
+    meta: { roles: [0] }, 
     children: [
       {
         path: "",

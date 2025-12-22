@@ -1,7 +1,6 @@
 <template>
-
-    <!-- App Bar -->
-    <div
+  <!-- App Bar -->
+  <div
     class="appbar rounded-3 p-3 mb-3 d-flex justify-content-between align-items-center"
   >
     <div class="d-flex align-items-center gap-2">
@@ -55,7 +54,7 @@
 
           <!-- <td>{{ item.incomingSubject }}</td> -->
           <td>{{ item.incomingBookNumber }}</td>
-          <td>{{formatDate( item.incomingDate) }}</td>
+          <td>{{ formatDate(item.incomingDate) }}</td>
 
           <td>
             <span v-if="item.status === 0" class="badge bg-secondary">
@@ -77,20 +76,28 @@
           <td>{{ item.rejectionReason || "-" }}</td>
 
           <td>
-            <div class="d-flex justify-content-center gap-2">
+            <div
+              v-if="item.status === 0"
+              class="d-flex justify-content-center gap-2"
+            >
               <!-- قبول -->
               <button
                 class="button-accept"
-                title="قبول المعاملة"
+                :disabled="actionLoadingId === item.incomingId"
                 @click="approve(item)"
               >
-                <svg class="svgIcon" viewBox="0 0 512 512">
+                <span
+                  v-if="actionLoadingId === item.incomingId"
+                  class="spinner-border spinner-border-sm text-light"
+                ></span>
+
+                <svg v-else class="svgIcon" viewBox="0 0 512 512">
                   <path
                     d="M173.9 439.4L7 272.5c-9.4-9.4-9.4-24.6 
-                         0-33.9l22.6-22.6c9.4-9.4 24.6-9.4 
-                         33.9 0L192 345.4 448.5 88.9c9.4-9.4 24.6-9.4 
-                         33.9 0L505 111.5c9.4 9.4 9.4 24.6 
-                         0 34L214.6 439.4c-9.4 9.4-24.6 9.4-33.9 0z"
+                       0-33.9l22.6-22.6c9.4-9.4 24.6-9.4 
+                       33.9 0L192 345.4 448.5 88.9c9.4-9.4 24.6-9.4 
+                       33.9 0L505 111.5c9.4 9.4 9.4 24.6 
+                       0 34L214.6 439.4c-9.4 9.4-24.6 9.4-33.9 0z"
                   />
                 </svg>
               </button>
@@ -98,24 +105,27 @@
               <!-- رفض -->
               <button
                 class="button-reject"
-                title="رفض المعاملة"
+                :disabled="actionLoadingId === item.incomingId"
                 @click="openReject(item)"
               >
                 <svg class="svgIcon" viewBox="0 0 384 512">
                   <path
                     d="M231.6 256l142.8-142.8c12.5-12.5 12.5-32.7 
-                         0-45.2L352 46.1c-12.5-12.5-32.7-12.5-45.2 
-                         0L192 160.8 77.2 46.1C64.7 33.6 44.5 33.6 32 
-                         46.1L9.4 68.7c-12.5 12.5-12.5 32.7 
-                         0 45.2L152.2 256 9.4 398.8c-12.5 12.5-12.5 32.7 
-                         0 45.2L32 466.1c12.5 12.5 32.7 12.5 
-                         45.2 0L192 351.2l114.8 114.8c12.5 12.5 32.7 12.5 
-                         45.2 0l22.6-22.6c12.5-12.5 12.5-32.7 
-                         0-45.2L231.6 256z"
+                       0-45.2L352 46.1c-12.5-12.5-32.7-12.5-45.2 
+                       0L192 160.8 77.2 46.1C64.7 33.6 44.5 33.6 32 
+                       46.1L9.4 68.7c-12.5 12.5-12.5 32.7 
+                       0 45.2L152.2 256 9.4 398.8c-12.5 12.5-12.5 32.7 
+                       0 45.2L32 466.1c12.5 12.5 32.7 12.5 
+                       45.2 0L192 351.2l114.8 114.8c12.5 12.5 32.7 12.5 
+                       45.2 0l22.6-22.6c12.5-12.5 12.5-32.7 
+                       0-45.2L231.6 256z"
                   />
                 </svg>
               </button>
             </div>
+
+            <!-- إذا ليست انتظار -->
+            <span v-else class="text-muted">—</span>
           </td>
         </tr>
       </tbody>
@@ -223,15 +233,25 @@ const load = async () => {
   }
 };
 
+const actionLoadingId = ref(null);
 const approve = async (row) => {
-  await changeMarginNoteStatus({
-    incomingId: row.incomingId,
-    status: 1,
-    rejectionReason: null,
-  });
+  if (actionLoadingId.value) return;
 
-  successAlert("تم قبول المعاملة");
-  load();
+  actionLoadingId.value = row.incomingId;
+  try {
+    await changeMarginNoteStatus({
+      incomingId: row.incomingId,
+      status: 1,
+      rejectionReason: null,
+    });
+
+    successAlert("تم قبول المعاملة");
+    await load();
+  } catch (e) {
+    errorAlert("فشل قبول المعاملة");
+  } finally {
+    actionLoadingId.value = null;
+  }
 };
 
 const openReject = (row) => {
@@ -241,15 +261,24 @@ const openReject = (row) => {
 };
 
 const submitReject = async () => {
-  await changeMarginNoteStatus({
-    incomingId: rejectId.value,
-    status: 2,
-    rejectionReason: reason.value,
-  });
+  if (!reason.value.trim()) return;
 
-  successAlert("تم رفض المعاملة");
-  rejectModal.hide();
-  load();
+  actionLoadingId.value = rejectId.value;
+  try {
+    await changeMarginNoteStatus({
+      incomingId: rejectId.value,
+      status: 2,
+      rejectionReason: reason.value,
+    });
+
+    successAlert("تم رفض المعاملة");
+    rejectModal.hide();
+    await load();
+  } catch (e) {
+    errorAlert("فشل رفض المعاملة");
+  } finally {
+    actionLoadingId.value = null;
+  }
 };
 
 const closeReject = () => rejectModal.hide();
@@ -278,7 +307,6 @@ const formatDate = (value) => {
 
   return `${y}/${m}/${d}`;
 };
-
 
 onMounted(() => {
   rejectModal = new Modal(rejectModalEl.value);

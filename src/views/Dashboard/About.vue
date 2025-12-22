@@ -1,9 +1,30 @@
 <template>
   <div class="dashboard container-fluid mt-0">
+    <!-- Appbar -->
+    <div
+      class="appbar rounded-3 p-3 mb-3 d-flex align-items-center justify-content-between"
+    >
+      <div class="d-flex align-items-center gap-2">
+        <span
+          class="appbar-icon d-inline-flex align-items-center justify-content-center"
+        >
+          <i class="bi bi-clipboard2-pulse"></i>
+        </span>
+        <div>
+          <h2 class="h5 fw-bold m-2">لوحة التحكم</h2>
+          <small class="text-muted">
+            عرض الاحصائيات مع تتبع تأييدات الجرحى
+          </small>
+        </div>
+      </div>
+    </div>
     <!-- Incoming Tracking Card -->
     <div class="card shadow-sm border-0 mb-4 p-4 track-card">
-      <div class="d-flex align-items-center mb-3">
-        <h5 class="fw-bold mb-0">تتبع الوارد</h5>
+      <div class="d-flex align-items-center mb-3 gap-2">
+        <span class="track-icon">
+          <i class="bi bi-arrow-repeat"></i>
+        </span>
+        <h5 class="fw-bold mb-0 track-title">تتبع الوارد</h5>
       </div>
       <div class="track-search-modern">
         <div class="search-field">
@@ -27,23 +48,6 @@
         <button class="btn-search" @click="track">تتبع الوارد</button>
       </div>
     </div>
-
-    <!-- Appbar -->
-    <div
-      class="appbar rounded-3 p-3 mb-3 d-flex align-items-center justify-content-between"
-    >
-      <div class="d-flex align-items-center gap-2">
-        <span
-          class="appbar-icon d-inline-flex align-items-center justify-content-center"
-        >
-          <i class="bi bi-clipboard2-pulse"></i>
-        </span>
-        <div>
-          <h2 class="h5 fw-bold m-2">لوحة التحكم</h2>
-        </div>
-      </div>
-    </div>
-
     <!-- Loading -->
     <div v-if="loading" class="spinner-wrapper">
       <div class="spinner"></div>
@@ -94,8 +98,11 @@
 
       <!-- Chart Row -->
       <div class="charts-box mt-5 p-4 border rounded-4">
-        <div class="d-flex align-items-center mb-4">
-          <h5 class="fw-bold mb-0">إحصائيات التأييدات</h5>
+        <div class="d-flex align-items-center mb-4 gap-2">
+          <span class="track-icon">
+            <i class="bi bi-bar-chart-line"></i>
+          </span>
+          <h5 class="fw-bold mb-0 track-title">إحصائيات التأييدات</h5>
         </div>
 
         <div class="chart-card p-3 border rounded-3 shadow-sm">
@@ -138,6 +145,10 @@
               <div class="info-item">
                 <span>الجهة المرسلة</span>
                 <strong>{{ trackResult.source }}</strong>
+              </div>
+              <div class="info-item">
+                <span>الجهة الاصابة</span>
+                <strong>{{ trackResult.subject }}</strong>
               </div>
             </div>
           </div>
@@ -198,13 +209,16 @@
             <ul class="timeline-modern actions">
               <li v-for="(a, i) in trackResult.actions" :key="i">
                 <span class="timeline-dot action"></span>
+
                 <div class="timeline-card">
                   <strong>{{ a.description }}</strong>
 
                   <div class="timeline-meta">
-                    {{ formatDate(a.actionDate) }} · {{ a.createdByUserName }}
+                    {{ formatDate(a.actionDate) }} ·
+                    {{ a.createdByUserName || "غير معروف" }}
                   </div>
 
+                  <!-- الهامش (كما هو) -->
                   <div
                     v-if="a.additionalInfo?.ManagerNote"
                     class="timeline-note"
@@ -212,9 +226,50 @@
                     <i class="bi bi-chat-left-text"></i>
                     {{ a.additionalInfo.ManagerNote }}
                   </div>
+
+                  <!--  الإضافة الجديدة: تغيير الحالة -->
+                  <div
+                    v-if="a.actionType === 'StatusChange'"
+                    class="timeline-status"
+                  >
+                    <div>
+                      <strong>الحالة:</strong>
+                      {{
+                        a.additionalInfo?.Status === "Approved"
+                          ? "موافق عليه"
+                          : a.additionalInfo?.Status === "Rejected"
+                          ? "مرفوض"
+                          : a.additionalInfo?.Status || "-"
+                      }}
+                    </div>
+
+                    <div v-if="a.additionalInfo?.ReceiveDate">
+                      <strong>تاريخ الاستلام:</strong>
+                      {{ a.additionalInfo.ReceiveDate }}
+                    </div>
+
+                    <div v-if="a.additionalInfo?.RejectionReason">
+                      <strong>سبب الرفض:</strong>
+                      {{ a.additionalInfo.RejectionReason }}
+                    </div>
+
+                    <div v-if="a.additionalInfo?.RejectionDate">
+                      <strong>تاريخ الرفض:</strong>
+                      {{ a.additionalInfo.RejectionDate }}
+                    </div>
+                  </div>
                 </div>
               </li>
             </ul>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-light"
+                @click="closeTrackModal"
+              >
+                إغلاق
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -245,13 +300,12 @@ const stats = ref({
   pendingIncomingsAfterTwoDaysCount: 0,
 });
 
-/* --------- إنشاء الشارت بعد وصول البيانات --------- */
+/* --------- Chart --------- */
 const renderChart = () => {
   const ctx = document.getElementById("lineChart");
 
   if (!ctx) return;
 
-  // حذف شارت سابق (إذا حدث تحديث)
   if (chart) chart.destroy();
 
   chart = new Chart(ctx, {
@@ -334,14 +388,16 @@ const formatDate = (value) => {
   });
 };
 
+const closeTrackModal = () => {
+  if (!trackModal) return;
+  trackModal.hide();
+};
 /* --------- تحميل بيانات الـ Dashboard --------- */
 onMounted(async () => {
   try {
     trackModal = new Modal(trackModalEl.value);
     const res = await getDashboardStats();
     stats.value = res.data.data;
-
-    // انتظر DOM بعد التحديث
     setTimeout(() => {
       renderChart();
     }, 150);
@@ -447,8 +503,10 @@ onMounted(async () => {
 }
 
 .track-card {
-  background: linear-gradient(135deg, #f8fcfd, #ffffff);
-  border-left: 5px solid #12b1d1;
+  background: #fff;
+  border: 2px dashed #12b1d1 !important;
+  border-radius: 12px;
+  padding: 16px;
 }
 
 .track-result textarea {
@@ -631,5 +689,36 @@ onMounted(async () => {
   display: flex;
   gap: 6px;
   align-items: center;
+}
+
+.timeline-status {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.timeline-status strong {
+  color: #0f6c88;
+}
+
+.track-title {
+  display: inline-block;
+  border-bottom: 3px solid #12b1d1;
+  padding-bottom: 15px;
+}
+.track-icon {
+  width: 38px;
+  height: 38px;
+  margin-left: 6px;
+  background: rgba(18, 177, 209, 0.12);
+  color: #12b1d1;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
 }
 </style>
